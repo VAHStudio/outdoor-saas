@@ -13,7 +13,7 @@ import java.util.List;
  * 社区信息管理控制器
  */
 @RestController
-@RequestMapping("/community")
+@RequestMapping("/api/community")
 @RequiredArgsConstructor
 public class CommunityController {
     

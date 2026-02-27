@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.advertising.mapper.AgentSessionMapper">
+    
+    <resultMap id="BaseResultMap" type="com.advertising.entity.agent.AgentSession">
+        <id column="id" property="id"/>
+        <result column="current_step" property="currentStep"/>
+        <result column="intent_json" property="intentJson"/>
+        <result column="context_json" property="contextJson"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="expire_at" property="expireAt"/>
+        <result column="status" property="status"/>
+    </resultMap>
+    
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM agent_session WHERE id = #{id}
+    </select>
+    
+    <insert id="insert">
+        INSERT INTO agent_session (
+            id, current_step, intent_json, context_json, 
+            created_at, updated_at, expire_at, status
+        ) VALUES (
+            #{id}, #{currentStep}, #{intentJson}, #{contextJson},
+            #{createdAt}, #{updatedAt}, #{expireAt}, #{status}
+        )
+    </insert>
+    
+    <update id="update">
+        UPDATE agent_session
+        <set>
+            <if test="currentStep != null">current_step = #{currentStep},</if>
+            <if test="intentJson != null">intent_json = #{intentJson},</if>
+            <if test="contextJson != null">context_json = #{contextJson},</if>
+            <if test="updatedAt != null">updated_at = #{updatedAt},</if>
+            <if test="expireAt != null">expire_at = #{expireAt},</if>
+            <if test="status != null">status = #{status}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    
+    <delete id="deleteExpired">
+        DELETE FROM agent_session WHERE expire_at &lt; #{now}
+    </delete>
+    
+    <select id="selectExpired" resultMap="BaseResultMap">
+        SELECT * FROM agent_session WHERE expire_at &lt; #{now}
+    </select>
+    
+</mapper>

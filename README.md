@@ -1,771 +1,413 @@
-# 广告投放管理系统 
+# 永达传媒 AI 广告投放管理系统
 
-## 项目概述
+<p align="center">
+  <img src="https://img.shields.io/badge/Spring%20Boot-4.0.3-brightgreen" alt="Spring Boot">
+  <img src="https://img.shields.io/badge/Java-21-orange" alt="Java">
+  <img src="https://img.shields.io/badge/React-19-blue" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-5.7-blue" alt="TypeScript">
+  <img src="https://img.shields.io/badge/Tailwind%20CSS-4.0-purple" alt="Tailwind CSS">
+  <img src="https://img.shields.io/badge/MySQL-8.0-yellow" alt="MySQL">
+</p>
 
-- **项目名称**: 广告投放管理系统
-- **技术栈**: Spring Boot 4+, Java 21, MyBatis, MySQL
-- **基础路径**: `/api`
+## 🎯 项目概述
 
+**永达传媒 AI 广告投放管理系统**是一个集成了 AI 智能助手的全栈广告投放管理平台。通过自然语言对话，用户可以快速创建广告方案、智能选择投放点位、管理项目全流程。
 
-## 通用响应格式
+### 核心特性
 
-```json
-{
-    "code": 200,
-    "message": "操作成功",
-    "data": {},
-    "timestamp": 1704067200000
-}
+- 🤖 **AI 智能对话** - 基于 Kimi AI 的自然语言交互，自动理解需求
+- 🎙️ **语音输入** - 支持语音转文字，长按投小智图标即可语音输入
+- 🧠 **智能领域匹配** - 自动识别问题领域（销售/媒介/工程/财务），匹配对应 AI 助理
+- 📍 **智能选点** - 根据时间范围自动选择空闲道闸/框架点位
+- 🎨 **个性化问候** - 根据时间、节日、生日显示文雅问候语
+- 📱 **移动端优先** - 响应式设计，完美适配手机端
+
+## 🏗️ 技术架构
+
+### 后端技术栈
+- **Spring Boot 4.0.3** - 核心框架
+- **Java 21** - 编程语言
+- **MyBatis** - 数据持久层
+- **MySQL 8.0** - 数据库
+- **Kimi AI** - 大语言模型 API
+- **Maven** - 构建工具
+
+### 前端技术栈
+- **React 19** - UI 框架
+- **TypeScript 5.7** - 类型安全
+- **Vite 6** - 构建工具
+- **Tailwind CSS 4** - 样式框架
+- **Framer Motion** - 动画库
+- **Lucide React** - 图标库
+
+## 🚀 快速开始
+
+### 环境要求
+- Java 21+
+- Node.js 18+
+- MySQL 8.0+
+
+### 1. 克隆项目
+
+```bash
+git clone <repository-url>
+cd advertising-system
 ```
 
-### 状态码说明
+### 2. 配置数据库
 
-| 状态码 | 说明 |
-|--------|------|
-| 200 | 成功 |
-| 400 | 参数错误 |
-| 404 | 资源不存在 |
-| 500 | 服务器内部错误 |
+```bash
+# 创建数据库
+mysql -u root -p
+CREATE DATABASE mvp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-## 接口列表
-
-### 一、社区管理 (Community)
-
-**基础路径**: `/api/community`
-
-#### 1. 根据ID查询社区
-- **请求方式**: GET
-- **请求路径**: `/api/community/{id}`
-- **参数说明**:
-  - `id` (路径参数): 社区ID
-- **响应示例**:
-```json
-{
-    "code": 200,
-    "message": "操作成功",
-    "data": {
-        "id": 1,
-        "communityNo": "COMM001",
-        "buildingName": "阳光花园",
-        "buildingAddress": "北京市朝阳区xxx街道",
-        "coordLat": 39.9042,
-        "coordLng": 116.4074,
-        "city": "北京"
-    }
-}
+# 执行初始化脚本（如果有）
+mysql -u root -p mvp < src/main/resources/db/migration/*.sql
 ```
 
-#### 2. 根据编号查询社区
-- **请求方式**: GET
-- **请求路径**: `/api/community/no/{communityNo}`
-- **参数说明**:
-  - `communityNo` (路径参数): 社区编号
-
-#### 3. 查询所有社区
-- **请求方式**: GET
-- **请求路径**: `/api/community/list`
-
-#### 4. 分页查询社区
-- **请求方式**: POST
-- **请求路径**: `/api/community/page?pageNum=1&pageSize=10`
-- **请求体**:
-```json
-{
-    "communityNo": "COMM",
-    "buildingName": "阳光",
-    "buildingAddress": "",
-    "city": "北京"
-}
-```
-
-#### 5. 新增社区
-- **请求方式**: POST
-- **请求路径**: `/api/community`
-- **请求体**:
-```json
-{
-    "communityNo": "COMM002",
-    "buildingName": "翠湖小区",
-    "buildingAddress": "上海市浦东新区xxx路",
-    "coordLat": 31.2304,
-    "coordLng": 121.4737,
-    "city": "上海"
-}
-```
-
-#### 6. 批量新增社区
-- **请求方式**: POST
-- **请求路径**: `/api/community/batch`
-- **请求体**:
-```json
-[
-    {
-        "communityNo": "COMM003",
-        "buildingName": "花园小区",
-        "city": "广州"
-    },
-    {
-        "communityNo": "COMM004",
-        "buildingName": "海景花园",
-        "city": "深圳"
-    }
-]
-```
-
-#### 7. 更新社区
-- **请求方式**: PUT
-- **请求路径**: `/api/community`
-- **请求体**:
-```json
-{
-    "id": 1,
-    "buildingName": "阳光花园二期",
-    "buildingAddress": "北京市朝阳区xxx街道xxx号"
-}
-```
-
-#### 8. 删除社区
-- **请求方式**: DELETE
-- **请求路径**: `/api/community/{id}`
-- **参数说明**:
-  - `id` (路径参数): 社区ID
-
-#### 9. 批量删除社区
-- **请求方式**: DELETE
-- **请求路径**: `/api/community/batch?ids=1,2,3`
-- **参数说明**:
-  - `ids` (查询参数): 社区ID列表
-
-#### 10. 根据城市查询社区
-- **请求方式**: GET
-- **请求路径**: `/api/community/city/{city}`
-- **参数说明**:
-  - `city` (路径参数): 城市名称
-
----
-
-### 二、道闸管理 (Barrier Gate)
-
-**基础路径**: `/api/barrier-gate`
-
-#### 1. 根据ID查询道闸
-- **请求方式**: GET
-- **请求路径**: `/api/barrier-gate/{id}`
-- **参数说明**:
-  - `id` (路径参数): 道闸ID
-
-#### 2. 根据编号查询道闸
-- **请求方式**: GET
-- **请求路径**: `/api/barrier-gate/no/{gateNo}`
-- **参数说明**:
-  - `gateNo` (路径参数): 道闸编号
-
-#### 3. 查询所有道闸
-- **请求方式**: GET
-- **请求路径**: `/api/barrier-gate/list`
-
-#### 4. 分页查询道闸
-- **请求方式**: POST
-- **请求路径**: `/api/barrier-gate/page?pageNum=1&pageSize=10`
-- **请求体**:
-```json
-{
-    "gateNo": "GATE",
-    "communityId": 1,
-    "deviceNo": "",
-    "devicePosition": 1,
-    "screenPosition": 1,
-    "lightboxDirection": 1
-}
-```
-
-#### 5. 根据社区查询道闸
-- **请求方式**: GET
-- **请求路径**: `/api/barrier-gate/community/{communityId}`
-- **参数说明**:
-  - `communityId` (路径参数): 社区ID
-
-#### 6. 新增道闸
-- **请求方式**: POST
-- **请求路径**: `/api/barrier-gate`
-- **请求体**:
-```json
-{
-    "gateNo": "GATE001",
-    "communityId": 1,
-    "deviceNo": "DEV001",
-    "doorLocation": "东门",
-    "devicePosition": 1,
-    "screenPosition": 1,
-    "lightboxDirection": 1
-}
-```
-- **字段说明**:
-  - `devicePosition`: 1-进口, 2-出口, 3-进出口
-  - `screenPosition`: 1-A, 2-B
-  - `lightboxDirection`: 1-朝外, 2-朝内, 3-临街面
-
-#### 7. 批量新增道闸
-- **请求方式**: POST
-- **请求路径**: `/api/barrier-gate/batch`
-
-#### 8. 更新道闸
-- **请求方式**: PUT
-- **请求路径**: `/api/barrier-gate`
-
-#### 9. 删除道闸
-- **请求方式**: DELETE
-- **请求路径**: `/api/barrier-gate/{id}`
-
-#### 10. 批量删除道闸
-- **请求方式**: DELETE
-- **请求路径**: `/api/barrier-gate/batch?ids=1,2,3`
-
----
-
-### 三、框架管理 (Frame)
-
-**基础路径**: `/api/frame`
-
-#### 1. 根据ID查询框架
-- **请求方式**: GET
-- **请求路径**: `/api/frame/{id}`
-
-#### 2. 根据编号查询框架
-- **请求方式**: GET
-- **请求路径**: `/api/frame/no/{frameNo}`
-
-#### 3. 查询所有框架
-- **请求方式**: GET
-- **请求路径**: `/api/frame/list`
-
-#### 4. 分页查询框架
-- **请求方式**: POST
-- **请求路径**: `/api/frame/page?pageNum=1&pageSize=10`
-- **请求体**:
-```json
-{
-    "frameNo": "FRAME",
-    "communityId": 1,
-    "building": "A座",
-    "unit": "1单元",
-    "elevator": "1号电梯",
-    "innerPosition": 1
-}
-```
-- **字段说明**:
-  - `innerPosition`: 1-左, 2-中, 3-右
-
-#### 5. 根据社区查询框架
-- **请求方式**: GET
-- **请求路径**: `/api/frame/community/{communityId}`
-
-#### 6. 新增框架
-- **请求方式**: POST
-- **请求路径**: `/api/frame`
-- **请求体**:
-```json
-{
-    "frameNo": "FRAME001",
-    "communityId": 1,
-    "building": "A座",
-    "unit": "1单元",
-    "elevator": "1号电梯",
-    "innerPosition": 1
-}
-```
-
-#### 7. 批量新增框架
-- **请求方式**: POST
-- **请求路径**: `/api/frame/batch`
-
-#### 8. 更新框架
-- **请求方式**: PUT
-- **请求路径**: `/api/frame`
-
-#### 9. 删除框架
-- **请求方式**: DELETE
-- **请求路径**: `/api/frame/{id}`
-
-#### 10. 批量删除框架
-- **请求方式**: DELETE
-- **请求路径**: `/api/frame/batch?ids=1,2,3`
-
----
-
-### 四、方案管理 (Plan)
-
-**基础路径**: `/api/plan`
-
-#### 1. 根据ID查询方案
-- **请求方式**: GET
-- **请求路径**: `/api/plan/{id}`
-
-#### 2. 根据编号查询方案
-- **请求方式**: GET
-- **请求路径**: `/api/plan/no/{planNo}`
-
-#### 3. 查询所有方案
-- **请求方式**: GET
-- **请求路径**: `/api/plan/list`
-
-#### 4. 分页查询方案
-- **请求方式**: POST
-- **请求路径**: `/api/plan/page?pageNum=1&pageSize=10`
-- **请求体**:
-```json
-{
-    "planNo": "PLAN",
-    "planName": "春季推广",
-    "customer": "某某公司",
-    "releaseStatus": 3,
-    "salesType": 1,
-    "releaseDateBegin": "2024-01-01",
-    "releaseDateEnd": "2024-12-31"
-}
-```
-- **字段说明**:
-  - `releaseStatus`: 1-意向, 2-锁位, 3-执行中, 4-执行完毕, 5-档
-  - `salesType`: 1-销售, 2-公益, 3-置换, 4-赠送, 5-余位, 6-其他
-
-#### 5. 根据客户查询方案
-- **请求方式**: GET
-- **请求路径**: `/api/plan/customer/{customer}`
-
-#### 6. 根据状态查询方案
-- **请求方式**: GET
-- **请求路径**: `/api/plan/status/{releaseStatus}`
-- **参数说明**:
-  - `releaseStatus` (路径参数): 发布状态 (1-意向, 2-锁位, 3-执行中, 4-执行完毕, 5-档)
-
-#### 7. 新增方案
-- **请求方式**: POST
-- **请求路径**: `/api/plan`
-- **请求体**:
-```json
-{
-    "planNo": "PLAN001",
-    "planName": "春季品牌推广方案",
-    "customer": "某某科技有限公司",
-    "releaseDateBegin": "2024-03-01",
-    "releaseDateEnd": "2024-05-31",
-    "releaseStatus": 3,
-    "salesType": 1,
-    "mediaRequirements": "需要在高端社区投放"
-}
-```
-
-#### 8. 批量新增方案
-- **请求方式**: POST
-- **请求路径**: `/api/plan/batch`
-
-#### 9. 更新方案
-- **请求方式**: PUT
-- **请求路径**: `/api/plan`
-
-#### 10. 删除方案
-- **请求方式**: DELETE
-- **请求路径**: `/api/plan/{id}`
-
-#### 11. 批量删除方案
-- **请求方式**: DELETE
-- **请求路径**: `/api/plan/batch?ids=1,2,3`
-
----
-
-### 五、方案社区关联管理 (Plan Community)
-
-**基础路径**: `/api/plan-community`
-
-#### 1. 根据ID查询关联
-- **请求方式**: GET
-- **请求路径**: `/api/plan-community/{id}`
-
-#### 2. 根据方案和社区查询关联
-- **请求方式**: GET
-- **请求路径**: `/api/plan-community/query?planId=1&communityId=1`
-- **参数说明**:
-  - `planId` (查询参数): 方案ID
-  - `communityId` (查询参数): 社区ID
-
-#### 3. 查询所有关联
-- **请求方式**: GET
-- **请求路径**: `/api/plan-community/list`
-
-#### 4. 分页查询关联
-- **请求方式**: POST
-- **请求路径**: `/api/plan-community/page?pageNum=1&pageSize=10`
-- **请求体**:
-```json
-{
-    "planId": 1,
-    "communityId": 1
-}
-```
-
-#### 5. 根据方案查询关联
-- **请求方式**: GET
-- **请求路径**: `/api/plan-community/plan/{planId}`
-
-#### 6. 根据社区查询关联
-- **请求方式**: GET
-- **请求路径**: `/api/plan-community/community/{communityId}`
-
-#### 7. 新增关联
-- **请求方式**: POST
-- **请求路径**: `/api/plan-community`
-- **请求体**:
-```json
-{
-    "planId": 1,
-    "communityId": 1,
-    "releaseDateBegin": "2024-03-01",
-    "releaseDateEnd": "2024-05-31",
-    "barrierRequiredQty": 2,
-    "frameRequiredQty": 5
-}
-```
-
-#### 8. 批量新增关联
-- **请求方式**: POST
-- **请求路径**: `/api/plan-community/batch`
-
-#### 9. 更新关联
-- **请求方式**: PUT
-- **请求路径**: `/api/plan-community`
-
-#### 10. 删除关联
-- **请求方式**: DELETE
-- **请求路径**: `/api/plan-community/{id}`
-
-#### 11. 批量删除关联
-- **请求方式**: DELETE
-- **请求路径**: `/api/plan-community/batch?ids=1,2,3`
-
----
-
-### 六、方案道闸明细管理 (Plan Barrier)
-
-**基础路径**: `/api/plan-barrier`
-
-#### 1. 根据ID查询明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-barrier/{id}`
-
-#### 2. 查询所有明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-barrier/list`
-
-#### 3. 分页查询明细
-- **请求方式**: POST
-- **请求路径**: `/api/plan-barrier/page?pageNum=1&pageSize=10`
-- **请求体**:
-```json
-{
-    "planId": 1,
-    "barrierGateId": 1,
-    "planCommunityId": 1,
-    "releaseStatus": 4
-}
-```
-- **字段说明**:
-  - `releaseStatus`: 1-意向, 2-锁位, 3-待刊发, 4-刊发中, 5-可调, 6-到期, 7-已下刊
-
-#### 4. 根据方案查询明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-barrier/plan/{planId}`
-
-#### 5. 根据道闸查询明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-barrier/barrier/{barrierGateId}`
-
-#### 6. 根据方案社区查询明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-barrier/plan-community/{planCommunityId}`
-
-#### 7. 根据状态查询明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-barrier/status/{releaseStatus}`
-
-#### 8. 新增明细
-- **请求方式**: POST
-- **请求路径**: `/api/plan-barrier`
-- **请求体**:
-```json
-{
-    "planId": 1,
-    "barrierGateId": 1,
-    "planCommunityId": 1,
-    "releaseDateBegin": "2024-03-01",
-    "releaseDateEnd": "2024-05-31",
-    "releaseStatus": 4
-}
-```
-
-#### 9. 批量新增明细
-- **请求方式**: POST
-- **请求路径**: `/api/plan-barrier/batch`
-
-#### 10. 更新明细
-- **请求方式**: PUT
-- **请求路径**: `/api/plan-barrier`
-
-#### 11. 删除明细
-- **请求方式**: DELETE
-- **请求路径**: `/api/plan-barrier/{id}`
-
-#### 12. 批量删除明细
-- **请求方式**: DELETE
-- **请求路径**: `/api/plan-barrier/batch?ids=1,2,3`
-
----
-
-### 七、方案框架明细管理 (Plan Frame)
-
-**基础路径**: `/api/plan-frame`
-
-#### 1. 根据ID查询明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-frame/{id}`
-
-#### 2. 查询所有明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-frame/list`
-
-#### 3. 分页查询明细
-- **请求方式**: POST
-- **请求路径**: `/api/plan-frame/page?pageNum=1&pageSize=10`
-- **请求体**:
-```json
-{
-    "planId": 1,
-    "frameId": 1,
-    "planCommunityId": 1,
-    "releaseStatus": 4
-}
-```
-
-#### 4. 根据方案查询明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-frame/plan/{planId}`
-
-#### 5. 根据框架查询明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-frame/frame/{frameId}`
-
-#### 6. 根据方案社区查询明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-frame/plan-community/{planCommunityId}`
-
-#### 7. 根据状态查询明细
-- **请求方式**: GET
-- **请求路径**: `/api/plan-frame/status/{releaseStatus}`
-
-#### 8. 新增明细
-- **请求方式**: POST
-- **请求路径**: `/api/plan-frame`
-- **请求体**:
-```json
-{
-    "planId": 1,
-    "frameId": 1,
-    "planCommunityId": 1,
-    "releaseDateBegin": "2024-03-01",
-    "releaseDateEnd": "2024-05-31",
-    "releaseStatus": 4
-}
-```
-
-#### 9. 批量新增明细
-- **请求方式**: POST
-- **请求路径**: `/api/plan-frame/batch`
-
-#### 10. 更新明细
-- **请求方式**: PUT
-- **请求路径**: `/api/plan-frame`
-
-#### 11. 删除明细
-- **请求方式**: DELETE
-- **请求路径**: `/api/plan-frame/{id}`
-
-#### 12. 批量删除明细
-- **请求方式**: DELETE
-- **请求路径**: `/api/plan-frame/batch?ids=1,2,3`
-
----
-
-## 枚举值说明
-
-### 设备位置 (devicePosition)
-| 值 | 说明 |
-|----|------|
-| 1 | 进口 |
-| 2 | 出口 |
-| 3 | 进出口 |
-
-### 画面位置 (screenPosition)
-| 值 | 说明 |
-|----|------|
-| 1 | A |
-| 2 | B |
-
-### 灯箱朝向 (lightboxDirection)
-| 值 | 说明 |
-|----|------|
-| 1 | 朝外 |
-| 2 | 朝内 |
-| 3 | 临街面 |
-
-### 梯内位置 (innerPosition)
-| 值 | 说明 |
-|----|------|
-| 1 | 左 |
-| 2 | 中 |
-| 3 | 右 |
-
-### 方案发布状态 (releaseStatus)
-| 值 | 说明 |
-|----|------|
-| 1 | 意向 |
-| 2 | 锁位 |
-| 3 | 执行中 |
-| 4 | 执行完毕 |
-| 5 | 档 |
-
-### 销售类型 (salesType)
-| 值 | 说明 |
-|----|------|
-| 1 | 销售 |
-| 2 | 公益 |
-| 3 | 置换 |
-| 4 | 赠送 |
-| 5 | 余位 |
-| 6 | 其他 |
-
-### 明细发布状态 (releaseStatus)
-| 值 | 说明 |
-|----|------|
-| 1 | 意向 |
-| 2 | 锁位 |
-| 3 | 待刊发 |
-| 4 | 刊发中 |
-| 5 | 可调 |
-| 6 | 到期 |
-| 7 | 已下刊 |
-
----
-
-## Druid监控
-
-- **地址**: http://localhost:8080/api/druid/index.html
-- **用户名**: admin
-- **密码**: admin
-
-## 数据库配置
+编辑 `src/main/resources/application.yml`：
 
 ```yaml
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
-    password: root
+    password: your_password
 ```
 
-## 项目结构
+### 3. 配置 Kimi AI（可选）
 
-```
-advertising-system/
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── com/advertising/
-│   │   │       ├── AdvertisingSystemApplication.java  # 启动类
-│   │   │       ├── common/                            # 通用类
-│   │   │       │   ├── Result.java                    # 通用响应结果
-│   │   │       │   ├── PageResult.java                # 分页结果
-│   │   │       │   ├── PageRequest.java               # 分页请求
-│   │   │       │   └── GlobalExceptionHandler.java    # 全局异常处理
-│   │   │       ├── config/                            # 配置类
-│   │   │       │   ├── CorsConfig.java                # 跨域配置
-│   │   │       │   └── WebMvcConfig.java              # Web MVC配置
-│   │   │       ├── controller/                        # 控制器层
-│   │   │       │   ├── CommunityController.java
-│   │   │       │   ├── BarrierGateController.java
-│   │   │       │   ├── FrameController.java
-│   │   │       │   ├── PlanController.java
-│   │   │       │   ├── PlanCommunityController.java
-│   │   │       │   ├── PlanBarrierController.java
-│   │   │       │   └── PlanFrameController.java
-│   │   │       ├── entity/                            # 实体类
-│   │   │       │   ├── Community.java
-│   │   │       │   ├── BarrierGate.java
-│   │   │       │   ├── Frame.java
-│   │   │       │   ├── Plan.java
-│   │   │       │   ├── PlanCommunity.java
-│   │   │       │   ├── PlanBarrier.java
-│   │   │       │   └── PlanFrame.java
-│   │   │       ├── enums/                             # 枚举类
-│   │   │       │   ├── DevicePositionEnum.java
-│   │   │       │   ├── ScreenPositionEnum.java
-│   │   │       │   ├── LightboxDirectionEnum.java
-│   │   │       │   ├── InnerPositionEnum.java
-│   │   │       │   ├── PlanReleaseStatusEnum.java
-│   │   │       │   ├── SalesTypeEnum.java
-│   │   │       │   └── DetailReleaseStatusEnum.java
-│   │   │       ├── mapper/                            # 数据访问层
-│   │   │       │   ├── CommunityMapper.java
-│   │   │       │   ├── BarrierGateMapper.java
-│   │   │       │   ├── FrameMapper.java
-│   │   │       │   ├── PlanMapper.java
-│   │   │       │   ├── PlanCommunityMapper.java
-│   │   │       │   ├── PlanBarrierMapper.java
-│   │   │       │   └── PlanFrameMapper.java
-│   │   │       └── service/                           # 业务逻辑层
-│   │   │           ├── CommunityService.java
-│   │   │           ├── BarrierGateService.java
-│   │   │           ├── FrameService.java
-│   │   │           ├── PlanService.java
-│   │   │           ├── PlanCommunityService.java
-│   │   │           ├── PlanBarrierService.java
-│   │   │           ├── PlanFrameService.java
-│   │   │           └── impl/                          # 实现类
-│   │   │               ├── CommunityServiceImpl.java
-│   │   │               ├── BarrierGateServiceImpl.java
-│   │   │               ├── FrameServiceImpl.java
-│   │   │               ├── PlanServiceImpl.java
-│   │   │               ├── PlanCommunityServiceImpl.java
-│   │   │               ├── PlanBarrierServiceImpl.java
-│   │   │               └── PlanFrameServiceImpl.java
-│   │   └── resources/
-│   │       ├── mapper/                                # MyBatis映射文件
-│   │       │   ├── CommunityMapper.xml
-│   │       │   ├── BarrierGateMapper.xml
-│   │       │   ├── FrameMapper.xml
-│   │       │   ├── PlanMapper.xml
-│   │       │   ├── PlanCommunityMapper.xml
-│   │       │   ├── PlanBarrierMapper.xml
-│   │       │   └── PlanFrameMapper.xml
-│   │       └── application.yml                        # 配置文件
-│   └── test/
-├── pom.xml                                            # Maven配置
-└── API文档.md                                         # API文档
+如果需要 AI 对话功能，配置 Kimi API Key：
+
+```yaml
+kimi:
+  api:
+    key: your_kimi_api_key_here
+    endpoint: https://api.moonshot.cn/v1/chat/completions
+    model: moonshot-v1-8k
 ```
 
-## 启动项目
+### 4. 开发模式运行
+
+**启动后端：**
 
 ```bash
-# 进入项目目录
-cd advertising-system
-
-# 编译项目
-mvn clean compile
-
-# 运行项目
 mvn spring-boot:run
+```
 
-# 或者打包后运行
+**启动前端（新终端）：**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+**访问地址：**
+- 前端开发服务器: http://localhost:3000
+- 后端 API: http://localhost:16000/api
+
+### 5. 生产模式部署
+
+```bash
+# 构建前端
+cd frontend
+npm install
+npm run build
+cd ..
+
+# 打包后端（自动包含前端）
 mvn clean package
+
+# 运行
 java -jar target/advertising-system-1.0.0.jar
 ```
 
-项目启动后，访问 http://localhost:8080/api/doc.html 查看API文档。
+**访问地址：** http://localhost:16000
+
+## 📁 项目结构
+
+```
+advertising-system/
+├── frontend/                          # 前端 React 应用
+│   ├── src/
+│   │   ├── App.tsx                   # 主应用组件
+│   │   ├── components/
+│   │   │   ├── AgentChatView.tsx    # AI 对话界面
+│   │   │   └── VoiceInputModal.tsx  # 语音输入弹窗
+│   │   ├── services/
+│   │   │   ├── agentService.ts      # Agent API 服务
+│   │   │   └── speechService.ts     # 语音识别服务
+│   │   ├── types.ts                 # TypeScript 类型
+│   │   └── index.css                # 全局样式
+│   └── package.json
+├── src/
+│   ├── main/
+│   │   ├── java/com/advertising/
+│   │   │   ├── AdvertisingSystemApplication.java
+│   │   │   ├── agent/                 # AI Agent 模块
+│   │   │   │   ├── controller/
+│   │   │   │   │   └── AgentController.java
+│   │   │   │   ├── service/
+│   │   │   │   │   ├── KimiAgentService.java
+│   │   │   │   │   ├── AgentOrchestratorService.java
+│   │   │   │   │   └── SmartPointSelector.java
+│   │   │   │   └── dto/
+│   │   │   ├── controller/            # REST API 控制器
+│   │   │   ├── entity/                # 实体类
+│   │   │   ├── enums/                 # 枚举类
+│   │   │   ├── mapper/                # MyBatis 接口
+│   │   │   └── service/               # 业务逻辑层
+│   │   └── resources/
+│   │       ├── mapper/                # MyBatis XML
+│   │       ├── static/                # 前端构建产物
+│   │       └── application.yml        # 配置文件
+│   └── test/
+├── pom.xml
+└── README.md
+```
+
+## ✨ 核心功能
+
+### 1. AI 智能对话
+
+用户可以通过自然语言与 AI 助手对话：
+
+```
+用户: "帮我建个可口可乐的3月份广告方案，选择10个空闲道闸广告位"
+
+AI: 1. 理解意图 → 2. 询问日期 → 3. 智能选点 → 4. 创建方案 → 5. 自动关联点位
+```
+
+**支持的对话类型：**
+- 智能创建广告方案
+- 查询空闲点位
+- 管理项目流程
+- 数据统计分析
+
+### 2. 语音输入
+
+- **长按投小智图标** 0.5秒触发语音输入
+- 支持**阿里云语音识别**（需配置）
+- 自动降级到 **Web Speech API**
+- 识别结果自动带入对话
+
+### 3. 智能领域匹配
+
+系统根据问题关键词自动匹配专业 AI 助理：
+
+| 领域 | 关键词 | AI 助理 |
+|------|--------|---------|
+| 销售 | 方案、客户、投放、广告、合同 | 销售 AI 助理 |
+| 媒介 | 点位、库存、资源、位置、社区 | 媒介 AI 助理 |
+| 工程 | 维护、验收、安装、设备、维修 | 工程 AI 助理 |
+| 财务 | 预算、发票、付款、报销、成本 | 财务 AI 助理 |
+
+### 4. 智能选点
+
+- **时间冲突检测** - 自动排除已被占用的点位
+- **均匀分布算法** - 点位均匀分布在不同社区
+- **混合模式** - 系统自动选择 + 用户确认调整
+
+### 5. 文雅问候语
+
+根据时间、节日、员工生日显示个性化问候：
+
+```
+早晨 (5-11点): "晨光熹微，惠风和畅，愿今日诸事顺遂"
+中午 (11-14点): "午时将至，日正当中，愿前程似锦"
+下午 (14-18点): "午后时光，宁静致远，愿身体康泰"
+晚上 (18-24点): "暮色四合，华灯初上，愿阖家欢乐"
+
+生日: "生辰吉乐，福寿康宁，愿步步高升"
+```
+
+## 📱 功能模块
+
+### 投小智（首页）
+- 智能输入框（支持打字/语音）
+- AI 主动业务资讯
+- 永达传媒 AI 团队（销售/媒介/工程/财务）
+- 长按投小智图标语音输入
+
+### AI 对话
+- 多轮对话上下文
+- 方案创建流程引导
+- 日期选择交互
+- 点位确认展示
+
+### 工作台
+- 常用应用快捷入口
+- 待办事项提醒
+- 最近访问记录
+
+### 方案管理
+- 方案列表查看
+- 方案详情（点位地图）
+- 方案创建与编辑
+
+### 任务管理
+- 工程任务列表
+- 任务详情与验收
+- 拍照上传
+
+## 🔌 API 接口
+
+### Agent 对话接口
+
+**发送消息**
+```http
+POST /api/agent/chat
+Content-Type: application/json
+
+{
+  "message": "帮我建个可口可乐的广告方案",
+  "sessionId": "optional-session-id"
+}
+```
+
+**响应示例**
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+    "type": "date_selection",
+    "message": "请确认投放日期范围",
+    "sessionId": "abc123",
+    "step": "date",
+    "actions": [
+      { "label": "3月1日-3月31日", "value": "2025-03-01,2025-03-31" }
+    ]
+  }
+}
+```
+
+### 其他 REST API
+
+详见 [API 文档](#api-documentation) 部分
+
+## 🗄️ 数据库表
+
+### 核心表
+
+- `community` - 社区信息
+- `barrier_gate` - 道闸信息
+- `frame` - 框架信息
+- `plan` - 广告方案
+- `plan_community` - 方案-社区关联
+- `plan_barrier` - 方案-道闸明细
+- `plan_frame` - 方案-框架明细
+- `agent_session` - AI 对话会话
+
+## 🔧 配置说明
+
+### application.yml
+
+```yaml
+server:
+  port: 16000
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: your_password
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 60000
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.advertising.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+# Kimi AI 配置（可选）
+kimi:
+  api:
+    key: your_kimi_api_key
+    endpoint: https://api.moonshot.cn/v1/chat/completions
+    model: moonshot-v1-8k
+```
+
+## 🐛 常见问题
+
+### 1. 前端构建失败
+
+```bash
+# 清除缓存重新安装
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### 2. 数据库连接失败
+
+- 检查 MySQL 服务是否启动
+- 检查用户名密码是否正确
+- 检查数据库是否存在
+- 检查 `allowPublicKeyRetrieval=true` 是否配置
+
+### 3. AI 对话无响应
+
+- 检查 Kimi API Key 是否配置正确
+- 检查网络连接
+- 查看后端日志是否有错误
+
+### 4. 语音识别失败
+
+- 检查麦克风权限是否允许
+- 阿里云语音识别需要正确配置密钥
+- 会自动降级到浏览器 Web Speech API
+
+## 📝 开发指南
+
+### 添加新的 AI 意图
+
+编辑 `AgentOrchestratorService.java`：
+
+```java
+private Result<AgentChatResponse> processIntentStep(...) {
+    // 在 intent 解析后添加新的处理逻辑
+    switch (intent.getAction()) {
+        case "CREATE_PLAN":
+            return processCreatePlan(session, intent);
+        case "QUERY":
+            return processQuery(session, intent);
+        // 添加新的意图处理
+    }
+}
+```
+
+### 修改问候语
+
+编辑 `App.tsx` 中的 `generateGreeting` 函数：
+
+```typescript
+const generateGreeting = () => {
+  // 添加新的问候语或节日
+  const festivalGreetings: Record<string, string> = {
+    '1-1': '新年伊始，万象更新',
+    // 添加新的节日
+  };
+};
+```
+
+## 📄 许可证
+
+[Apache License 2.0](LICENSE)
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request！
+
+## 📞 联系
+
+如有问题，请联系项目维护者。
+
+---
+
+**Made with ❤️ by 永达传媒技术团队**

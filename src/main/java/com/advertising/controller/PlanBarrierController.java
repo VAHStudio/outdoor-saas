@@ -13,7 +13,7 @@ import java.util.List;
  * 方案道闸明细管理控制器
  */
 @RestController
-@RequestMapping("/plan-barrier")
+@RequestMapping("/api/plan-barrier")
 @RequiredArgsConstructor
 public class PlanBarrierController {
     

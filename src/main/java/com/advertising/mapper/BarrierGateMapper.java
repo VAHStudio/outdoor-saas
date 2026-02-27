@@ -94,4 +94,32 @@ public interface BarrierGateMapper {
      * @return 影响行数
      */
     int deleteByCommunityId(Integer communityId);
+    
+    /**
+     * 查询空闲道闸：在指定时间段内没有被占用的道闸
+     * @param city 城市（可选）
+     * @param communityId 社区ID（可选）
+     * @param beginDate 开始日期
+     * @param endDate 结束日期
+     * @param limit 限制数量（可选）
+     * @return 空闲道闸列表
+     */
+    List<BarrierGate> selectAvailableBarriers(
+            @Param("city") String city,
+            @Param("communityId") Integer communityId,
+            @Param("beginDate") java.time.LocalDate beginDate,
+            @Param("endDate") java.time.LocalDate endDate,
+            @Param("limit") Integer limit);
+    
+    /**
+     * 统计空闲道闸数量
+     * @param city 城市（可选）
+     * @param beginDate 开始日期
+     * @param endDate 结束日期
+     * @return 空闲道闸数量
+     */
+    Integer countAvailableBarriers(
+            @Param("city") String city,
+            @Param("beginDate") java.time.LocalDate beginDate,
+            @Param("endDate") java.time.LocalDate endDate);
 }

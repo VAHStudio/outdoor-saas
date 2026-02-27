@@ -13,7 +13,7 @@ import java.util.List;
  * 框架媒体管理控制器
  */
 @RestController
-@RequestMapping("/frame")
+@RequestMapping("/api/frame")
 @RequiredArgsConstructor
 public class FrameController {
     

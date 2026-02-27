@@ -1,2 +1,28 @@
+# Backend
 /target/
 /.idea/
+*.iml
+*.class
+*.log
+
+# Frontend
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Static resources (auto-generated)
+/src/main/resources/static/
+!/src/main/resources/static/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~

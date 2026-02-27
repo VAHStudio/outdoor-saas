@@ -164,4 +164,49 @@
         DELETE FROM barrier_gate WHERE community_id = #{communityId}
     </delete>
     
+    <!-- 查询空闲道闸：在指定时间段内没有被任何方案占用的道闸 -->
+    <select id="selectAvailableBarriers" resultMap="WithCommunityResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.community_no, c.building_name, c.building_address, c.city,
+               c.coord_lat, c.coord_lng
+        FROM barrier_gate bg
+        LEFT JOIN community c ON bg.community_id = c.id
+        WHERE NOT EXISTS (
+            SELECT 1 FROM plan_barrier pb
+            WHERE pb.barrier_gate_id = bg.id
+            AND pb.release_status IN (2, 3, 4)  -- 锁位、待刊发、刊发中
+            AND (
+                (pb.release_date_begin &lt;= #{endDate} AND pb.release_date_end &gt;= #{beginDate})
+            )
+        )
+        <if test="city != null and city != ''">
+            AND c.city = #{city}
+        </if>
+        <if test="communityId != null">
+            AND bg.community_id = #{communityId}
+        </if>
+        ORDER BY bg.id
+        <if test="limit != null">
+            LIMIT #{limit}
+        </if>
+    </select>
+    
+    <!-- 统计空闲道闸数量 -->
+    <select id="countAvailableBarriers" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM barrier_gate bg
+        LEFT JOIN community c ON bg.community_id = c.id
+        WHERE NOT EXISTS (
+            SELECT 1 FROM plan_barrier pb
+            WHERE pb.barrier_gate_id = bg.id
+            AND pb.release_status IN (2, 3, 4)
+            AND (
+                (pb.release_date_begin &lt;= #{endDate} AND pb.release_date_end &gt;= #{beginDate})
+            )
+        )
+        <if test="city != null and city != ''">
+            AND c.city = #{city}
+        </if>
+    </select>
+    
 </mapper>

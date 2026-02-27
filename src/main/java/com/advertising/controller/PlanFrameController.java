@@ -13,7 +13,7 @@ import java.util.List;
  * 方案框架明细管理控制器
  */
 @RestController
-@RequestMapping("/plan-frame")
+@RequestMapping("/api/plan-frame")
 @RequiredArgsConstructor
 public class PlanFrameController {
     

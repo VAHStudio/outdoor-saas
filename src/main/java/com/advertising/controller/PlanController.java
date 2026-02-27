@@ -13,7 +13,7 @@ import java.util.List;
  * 投放方案管理控制器
  */
 @RestController
-@RequestMapping("/plan")
+@RequestMapping("/api/plan")
 @RequiredArgsConstructor
 public class PlanController {
     

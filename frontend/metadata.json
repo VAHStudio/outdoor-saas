@@ -1,0 +1,5 @@
+{
+  "name": "AI 户外广告助手",
+  "description": "一个全方位的 AI 驱动户外广告销售与工程管理平台，涵盖方案设计、点位管理、工程验收及业务洞察。",
+  "requestFramePermissions": ["camera", "geolocation"]
+}

@@ -1,11 +1,15 @@
 server:
   port: 16000
-  servlet:
-    context-path: /api
 
 spring:
   application:
     name: advertising-system
+  web:
+    resources:
+      static-locations: classpath:/static/,classpath:/public/
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://121.40.166.153:6306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
@@ -37,3 +41,10 @@ mybatis:
 logging:
   level:
     com.advertising.mapper: debug
+
+# Kimi AI 配置
+kimi:
+  api:
+    key: sk-sEw7FpZfisMZ2hNwSrHtdN4WV5AwD8pQ3Y3OODfmVdv88zKG
+    endpoint: https://api.moonshot.cn/v1/chat/completions
+    model: moonshot-v1-8k
