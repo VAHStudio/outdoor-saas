@@ -65,9 +65,15 @@ export default function Resources() {
         communityService.getBarrierGates(),
         communityService.getFrames()
       ]);
-      setCommunities(communitiesData);
-      setBarrierGates(barriersData);
-      setFrames(framesData);
+      
+      // Handle API response format {code: 200, data: [...]}
+      const communities = Array.isArray(communitiesData) ? communitiesData : communitiesData.data || [];
+      const barriers = Array.isArray(barriersData) ? barriersData : barriersData.data || [];
+      const frames = Array.isArray(framesData) ? framesData : framesData.data || [];
+      
+      setCommunities(communities);
+      setBarrierGates(barriers);
+      setFrames(frames);
     } catch (err) {
       setError('加载资源数据失败');
       console.error(err);

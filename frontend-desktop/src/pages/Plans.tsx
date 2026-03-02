@@ -53,7 +53,8 @@ export default function Plans() {
   const loadPlansData = async () => {
     try {
       setLoading(true);
-      const plansData = await planService.getAllPlans();
+      const plansResponse = await planService.getAllPlans();
+      const plansData = plansResponse.data || plansResponse;
       
       // Transform API data to display format
       const displayPlans: DisplayPlan[] = plansData.map(plan => ({

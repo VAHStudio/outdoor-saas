@@ -25,11 +25,15 @@ export default function Inventory() {
   const loadInventory = async () => {
     try {
       setLoading(true);
-      const [communities, barriers, frames] = await Promise.all([
-        communityService.getAllCommunities(),
-        communityService.getBarrierGates(),
-        communityService.getFrames()
-      ]);
+        const [communitiesData, barriersData, framesData] = await Promise.all([
+          communityService.getAllCommunities(),
+          communityService.getBarrierGates(),
+          communityService.getFrames()
+        ]);
+        
+        const communities = Array.isArray(communitiesData) ? communitiesData : communitiesData.data || [];
+        const barriers = Array.isArray(barriersData) ? barriersData : barriersData.data || [];
+        const frames = Array.isArray(framesData) ? framesData : framesData.data || [];
 
       const items: InventoryItem[] = [
         ...barriers.map((barrier, idx) => {
@@ -42,7 +46,7 @@ export default function Inventory() {
             status: barrier.releaseStatus === 0 ? 'available' : barrier.releaseStatus === 1 ? 'occupied' : 'maintenance',
             price: 1200,
             dateRange: barrier.releaseDateBegin && barrier.releaseDateEnd 
-              ? \`\${barrier.releaseDateBegin} ~ \${barrier.releaseDateEnd}\`
+              ? `${barrier.releaseDateBegin} ~ ${barrier.releaseDateEnd}`
               : '全年可投'
           };
         }),
@@ -50,13 +54,13 @@ export default function Inventory() {
           const community = communities.find(c => c.id === frame.communityId);
           return {
             id: frame.frameNo,
-            name: \`\${frame.building} \${frame.unit}\`,
+            name: `${frame.building} ${frame.unit}`,
             community: community?.buildingName || '未知社区',
             mediaType: '电梯框架',
             status: frame.releaseStatus === 0 ? 'available' : frame.releaseStatus === 1 ? 'occupied' : 'maintenance',
             price: 300,
             dateRange: frame.releaseDateBegin && frame.releaseDateEnd
-              ? \`\${frame.releaseDateBegin} ~ \${frame.releaseDateEnd}\`
+              ? `${frame.releaseDateBegin} ~ ${frame.releaseDateEnd}`
               : '全年可投'
           };
         })

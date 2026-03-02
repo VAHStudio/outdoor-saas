@@ -57,10 +57,10 @@ export const communityService = {
     request<Community[]>(`/community/list?page=${page}&size=${size}`),
 
   // 获取道闸列表
-  getBarrierGates: () => request<BarrierGate[]>('/barrier-gates/list'),
+  getBarrierGates: () => request<BarrierGate[]>('/barrier-gate/list'),
 
   // 获取框架列表
-  getFrames: () => request<Frame[]>('/frames/list'),
+  getFrames: () => request<Frame[]>('/frame/list'),
 
   // 根据社区获取道闸
   getBarriersByCommunity: (communityId: number) =>
