@@ -1,10 +1,84 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import { dashboardService, DashboardStats } from '../services/dashboardService';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const data = await dashboardService.getStats();
+      setStats(data);
+    } catch (err) {
+      setError('加载数据失败');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 antialiased h-screen overflow-hidden flex">
+        <Sidebar />
+        <main className="flex-1 flex flex-col min-w-0 relative">
+          <Header title="智能工作台" subtitle="加载中...">
+            <div className="relative hidden md:block">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="material-icons-round text-subtext-light dark:text-subtext-dark text-lg">search</span>
+              </span>
+              <input className="w-64 pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-text-light dark:text-text-dark placeholder-subtext-light dark:placeholder-subtext-dark" placeholder="让 AI 帮您查找合同、客户..." type="text"/>
+            </div>
+          </Header>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-subtext-light dark:text-subtext-dark">加载数据中...</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 antialiased h-screen overflow-hidden flex">
+        <Sidebar />
+        <main className="flex-1 flex flex-col min-w-0 relative">
+          <Header title="智能工作台" subtitle="加载失败">
+            <div className="relative hidden md:block">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <span className="material-icons-round text-subtext-light dark:text-subtext-dark text-lg">search</span>
+              </span>
+              <input className="w-64 pl-10 pr-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-primary text-text-light dark:text-text-dark placeholder-subtext-light dark:placeholder-subtext-dark" placeholder="让 AI 帮您查找合同、客户..." type="text"/>
+            </div>
+          </Header>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <p className="text-red-500 mb-4">{error}</p>
+              <button 
+                onClick={loadDashboardData}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+              >
+                重新加载
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark font-sans transition-colors duration-300 antialiased h-screen overflow-hidden flex">
@@ -77,7 +151,7 @@ export default function Dashboard() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <p className="text-sm text-subtext-light dark:text-subtext-dark font-medium">可用资源位</p>
-                    <h4 className="text-3xl font-display font-bold text-text-light dark:text-text-dark mt-1">1,240</h4>
+                    <h4 className="text-3xl font-display font-bold text-text-light dark:text-text-dark mt-1">{stats?.availableResources?.toLocaleString() || 0}</h4>
                   </div>
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
                     <span className="material-icons-round text-[14px] mr-1">trending_up</span> +4.5%
@@ -86,17 +160,17 @@ export default function Dashboard() {
                 <div className="h-2 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                   <div className="h-full bg-primary w-[75%] rounded-full"></div>
                 </div>
-                <p className="text-xs text-subtext-light dark:text-subtext-dark mt-2">75% 入驻率</p>
+                <p className="text-xs text-subtext-light dark:text-subtext-dark mt-2">{stats?.resourceUtilization || 75}% 入驻率</p>
               </div>
 
               <div className="bg-surface-light dark:bg-surface-dark p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <p className="text-sm text-subtext-light dark:text-subtext-dark font-medium">本月营收</p>
-                    <h4 className="text-3xl font-display font-bold text-text-light dark:text-text-dark mt-1">¥89,400</h4>
+                    <h4 className="text-3xl font-display font-bold text-text-light dark:text-text-dark mt-1">¥{(stats?.monthlyRevenue || 0).toLocaleString()}</h4>
                   </div>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
-                    <span className="material-icons-round text-[14px] mr-1">trending_down</span> -2.1%
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${(stats?.revenueChange || 0) >= 0 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
+                    <span className="material-icons-round text-[14px] mr-1">{(stats?.revenueChange || 0) >= 0 ? 'trending_up' : 'trending_down'}</span> {(stats?.revenueChange || 0) >= 0 ? '+' : ''}{stats?.revenueChange || -2.1}%
                   </span>
                 </div>
                 <div className="flex items-end space-x-2 h-10 mt-2">
@@ -113,7 +187,7 @@ export default function Dashboard() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <p className="text-sm text-subtext-light dark:text-subtext-dark font-medium">待办事项</p>
-                    <h4 className="text-3xl font-display font-bold text-text-light dark:text-text-dark mt-1">12</h4>
+                    <h4 className="text-3xl font-display font-bold text-text-light dark:text-text-dark mt-1">{stats?.pendingTasks || 0}</h4>
                   </div>
                   <div className="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
                     <span className="material-icons-round text-lg">priority_high</span>
@@ -121,12 +195,12 @@ export default function Dashboard() {
                 </div>
                 <div className="grid grid-cols-2 gap-2 mt-2">
                   <div className="bg-gray-50 dark:bg-gray-800 rounded p-2 text-center">
-                    <span className="block text-xs text-subtext-light dark:text-subtext-dark">待审批</span>
-                    <span className="block text-lg font-bold text-text-light dark:text-text-dark">5</span>
+                    <span className="block text-xs text-subtext-light dark:text-subtext-dark">活跃方案</span>
+                    <span className="block text-lg font-bold text-text-light dark:text-text-dark">{stats?.activePlans || 0}</span>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-800 rounded p-2 text-center">
-                    <span className="block text-xs text-subtext-light dark:text-subtext-dark">待巡检</span>
-                    <span className="block text-lg font-bold text-text-light dark:text-text-dark">7</span>
+                    <span className="block text-xs text-subtext-light dark:text-subtext-dark">总社区</span>
+                    <span className="block text-lg font-bold text-text-light dark:text-text-dark">{stats?.totalCommunities || 0}</span>
                   </div>
                 </div>
               </div>
@@ -136,55 +210,33 @@ export default function Dashboard() {
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 bg-surface-light dark:bg-surface-dark rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/30">
-                <h3 className="font-bold text-text-light dark:text-text-dark">待办任务</h3>
-                <a className="text-sm text-primary hover:underline" href="#">查看全部</a>
+                <h3 className="font-bold text-text-light dark:text-text-dark">最近方案</h3>
+                <a className="text-sm text-primary hover:underline" href="#/plans">查看全部</a>
               </div>
               <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-center gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
-                    <span className="material-icons-round">description</span>
+                {stats?.recentPlans?.length > 0 ? (
+                  stats.recentPlans.map((plan, index) => (
+                    <div key={plan.id || index} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-center gap-4">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <span className="material-icons-round">description</span>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-semibold text-text-light dark:text-text-dark">{plan.planName}</h4>
+                        <p className="text-xs text-subtext-light dark:text-subtext-dark mt-1">客户: {plan.customer}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-xs font-medium px-2 py-1 rounded ${plan.status === '进行中' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400' : plan.status === '已完成' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'}`}>{plan.status}</span>
+                        <button className="text-subtext-light hover:text-primary dark:text-subtext-dark">
+                          <span className="material-icons-round">chevron_right</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-subtext-light dark:text-subtext-dark">
+                    暂无方案数据
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-text-light dark:text-text-dark">合同审批 - 星空传媒</h4>
-                    <p className="text-xs text-subtext-light dark:text-subtext-dark mt-1">特殊价格条款需您审批确认。</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-medium text-orange-500 bg-orange-100 dark:bg-orange-900/30 px-2 py-1 rounded">高优先级</span>
-                    <button className="text-subtext-light hover:text-primary dark:text-subtext-dark">
-                      <span className="material-icons-round">chevron_right</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-center gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
-                    <span className="material-icons-round">image</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-text-light dark:text-text-dark">画面审核 - B区</h4>
-                    <p className="text-xs text-subtext-light dark:text-subtext-dark mt-1">24个点位上报了画面问题。</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-medium text-blue-500 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded">运营</span>
-                    <button className="text-subtext-light hover:text-primary dark:text-subtext-dark">
-                      <span className="material-icons-round">chevron_right</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors flex items-center gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
-                    <span className="material-icons-round">handyman</span>
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-text-light dark:text-text-dark">维修派单 - 屏幕 #402</h4>
-                    <p className="text-xs text-subtext-light dark:text-subtext-dark mt-1">监控系统报告信号丢失。</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-medium text-gray-500 bg-gray-100 dark:bg-gray-700 dark:text-gray-300 px-2 py-1 rounded">维修</span>
-                    <button className="text-subtext-light hover:text-primary dark:text-subtext-dark">
-                      <span className="material-icons-round">chevron_right</span>
-                    </button>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
@@ -193,13 +245,31 @@ export default function Dashboard() {
               <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-white opacity-10"></div>
               <div className="flex items-center gap-2 mb-4">
                 <span className="material-icons-round">auto_awesome</span>
-                <h3 className="font-bold text-lg">AI 洞察</h3>
+                <h3 className="font-bold text-lg">资源统计</h3>
               </div>
-              <p className="text-sm text-blue-50 leading-relaxed mb-6">
-                基于历史数据分析，<strong>北区</strong> 的入住率预计下个月将下降 15%。建议针对空闲点位启动促销活动。
-              </p>
-              <button className="w-full py-2.5 bg-white text-primary font-semibold rounded-lg hover:bg-blue-50 transition-colors shadow-sm flex items-center justify-center gap-2">
-                <span>生成活动方案</span>
+              <div className="space-y-3 text-sm text-blue-50">
+                <div className="flex justify-between">
+                  <span>总社区数:</span>
+                  <span className="font-semibold">{stats?.totalCommunities || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>总道闸数:</span>
+                  <span className="font-semibold">{stats?.totalBarrierGates || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>总框架数:</span>
+                  <span className="font-semibold">{stats?.totalFrames || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>可用资源:</span>
+                  <span className="font-semibold">{stats?.availableResources || 0}</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate('/resources')}
+                className="w-full mt-6 py-2.5 bg-white text-primary font-semibold rounded-lg hover:bg-blue-50 transition-colors shadow-sm flex items-center justify-center gap-2"
+              >
+                <span>查看资源详情</span>
                 <span className="material-icons-round text-sm">arrow_forward</span>
               </button>
             </div>

@@ -1,25 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
+import { planService, Plan } from '../services/planService';
 
 // --- Types ---
-interface AdSlot {
-  id: string;
-  name: string;
-  price: number;
-  status: string;
-}
-
-interface Point {
-  id: string;
-  name: string;
-  location: string;
-  slots: AdSlot[];
-}
-
 type PlanStatus = 'draft' | 'communicating' | 'pending' | 'signed';
 
-interface Plan {
+interface DisplayPlan {
   id: string;
   title: string;
   customer: string;
@@ -27,95 +14,10 @@ interface Plan {
   budget: number;
   requirements: string;
   mediaTypes: string[];
-  points: Point[];
+  points: any[];
   mockups: string[];
   updatedAt: string;
 }
-
-// --- Mock Data ---
-const mockPlans: Plan[] = [
-  {
-    id: 'PLN-001',
-    title: '星空传媒 2024 Q3 品牌焕新',
-    customer: '星空传媒',
-    status: 'communicating',
-    budget: 500000,
-    requirements: '覆盖市中心核心商圈，提升品牌年轻化形象，要求高人流量和强视觉冲击力。',
-    mediaTypes: ['LED大屏', '地铁灯箱'],
-    updatedAt: '2024-06-15',
-    points: [
-      {
-        id: 'PT-101',
-        name: '市中心商业街',
-        location: '市中心',
-        slots: [
-          { id: 'SL-101-1', name: '入口主屏 A', price: 12000, status: 'available' },
-          { id: 'SL-101-2', name: '广场侧屏 B', price: 9800, status: 'available' }
-        ]
-      },
-      {
-        id: 'PT-102',
-        name: '科技园地铁站',
-        location: '科技园',
-        slots: [
-          { id: 'SL-102-1', name: 'A出口通道灯箱', price: 4500, status: 'available' },
-          { id: 'SL-102-2', name: '站厅包柱', price: 8000, status: 'available' }
-        ]
-      }
-    ],
-    mockups: [
-      'https://images.unsplash.com/photo-1542204165-65bf26472b9b?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=800&q=80'
-    ]
-  },
-  {
-    id: 'PLN-002',
-    title: '绿地集团 新盘发售宣传',
-    customer: '绿地集团',
-    status: 'pending',
-    budget: 300000,
-    requirements: '针对高净值人群，覆盖高端住宅区及周边主干道，强调品质感。',
-    mediaTypes: ['户外看板', '社区道闸'],
-    updatedAt: '2024-06-18',
-    points: [
-      {
-        id: 'PT-201',
-        name: '滨海大道',
-        location: '南山区',
-        slots: [
-          { id: 'SL-201-1', name: '跨线桥高炮', price: 25000, status: 'available' }
-        ]
-      }
-    ],
-    mockups: [
-      'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80'
-    ]
-  },
-  {
-    id: 'PLN-003',
-    title: '蓝天科技 新品发布会预热',
-    customer: '蓝天科技',
-    status: 'signed',
-    budget: 800000,
-    requirements: '全城核心地段霸屏，制造话题热度，配合线上社交媒体传播。',
-    mediaTypes: ['LED大屏', '地标建筑灯光秀'],
-    updatedAt: '2024-06-20',
-    points: [],
-    mockups: []
-  },
-  {
-    id: 'PLN-004',
-    title: '本地生活APP 社区下沉推广',
-    customer: '某互联网公司',
-    status: 'draft',
-    budget: 150000,
-    requirements: '精准覆盖大型居住社区，高频次曝光，引导扫码下载。',
-    mediaTypes: ['电梯海报', '社区门禁'],
-    updatedAt: '2024-06-22',
-    points: [],
-    mockups: []
-  }
-];
 
 const columns: { id: PlanStatus; title: string; color: string }[] = [
   { id: 'draft', title: '草稿', color: 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300' },
@@ -124,10 +26,57 @@ const columns: { id: PlanStatus; title: string; color: string }[] = [
   { id: 'signed', title: '已签约', color: 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' }
 ];
 
+// Map release status to our status types
+const mapStatus = (releaseStatus: number): PlanStatus => {
+  switch (releaseStatus) {
+    case 0: return 'draft';
+    case 1: return 'communicating';
+    case 2: return 'pending';
+    case 3: return 'signed';
+    default: return 'draft';
+  }
+};
+
 export default function Plans() {
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<DisplayPlan | null>(null);
   const [isMapMode, setIsMapMode] = useState(false);
   const [expandedPoints, setExpandedPoints] = useState<string[]>([]);
+  const [plans, setPlans] = useState<DisplayPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load real plans data
+  useEffect(() => {
+    loadPlansData();
+  }, []);
+
+  const loadPlansData = async () => {
+    try {
+      setLoading(true);
+      const plansData = await planService.getAllPlans();
+      
+      // Transform API data to display format
+      const displayPlans: DisplayPlan[] = plansData.map(plan => ({
+        id: plan.planNo,
+        title: plan.planName,
+        customer: plan.customer,
+        status: mapStatus(plan.releaseStatus),
+        budget: 500000, // Mock budget as it's not in the API
+        requirements: plan.mediaRequirements || '暂无需求说明',
+        mediaTypes: ['电梯框架', '道闸'], // Mock media types
+        updatedAt: plan.updatedAt ? new Date(plan.updatedAt).toLocaleDateString('zh-CN') : new Date().toLocaleDateString('zh-CN'),
+        points: [], // Will be populated when viewing details
+        mockups: []
+      }));
+      
+      setPlans(displayPlans);
+    } catch (err) {
+      setError('加载方案数据失败');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // --- Handlers ---
   const togglePointExpand = (pointId: string) => {
@@ -139,9 +88,9 @@ export default function Plans() {
   const toggleAllPoints = () => {
     if (!selectedPlan) return;
     if (expandedPoints.length === selectedPlan.points.length) {
-      setExpandedPoints([]); // Collapse all
+      setExpandedPoints([]);
     } else {
-      setExpandedPoints(selectedPlan.points.map(p => p.id)); // Expand all
+      setExpandedPoints(selectedPlan.points.map(p => p.id));
     }
   };
 
@@ -149,7 +98,7 @@ export default function Plans() {
   const renderKanban = () => (
     <div className="flex gap-6 h-full overflow-x-auto pb-4">
       {columns.map(col => {
-        const columnPlans = mockPlans.filter(p => p.status === col.id);
+        const columnPlans = plans.filter(p => p.status === col.id);
         return (
           <div key={col.id} className="flex-shrink-0 w-80 flex flex-col bg-slate-100/50 dark:bg-slate-800/20 rounded-2xl border border-border-light dark:border-border-dark overflow-hidden">
             <div className="p-4 border-b border-border-light dark:border-border-dark flex items-center justify-between bg-slate-100 dark:bg-slate-800/50">
@@ -167,7 +116,7 @@ export default function Plans() {
                   key={plan.id}
                   onClick={() => {
                     setSelectedPlan(plan);
-                    setExpandedPoints(plan.points.map(p => p.id)); // Default expand all on open
+                    setExpandedPoints(plan.points.map(p => p.id));
                   }}
                   className="bg-white dark:bg-surface-dark p-4 rounded-xl shadow-sm border border-border-light dark:border-border-dark cursor-pointer hover:shadow-md hover:border-primary transition-all group"
                 >
@@ -273,12 +222,14 @@ export default function Plans() {
               选点列表 ({selectedPlan.points.length} 个点位)
             </h2>
             <div className="flex items-center gap-3">
-              <button 
-                onClick={toggleAllPoints}
-                className="text-sm text-primary hover:text-blue-700 font-medium transition-colors"
-              >
-                {isAllExpanded ? '一键折叠' : '一键展开'}
-              </button>
+              {selectedPlan.points.length > 0 && (
+                <button 
+                  onClick={toggleAllPoints}
+                  className="text-sm text-primary hover:text-blue-700 font-medium transition-colors"
+                >
+                  {isAllExpanded ? '一键折叠' : '一键展开'}
+                </button>
+              )}
               <div className="flex items-center bg-slate-200 dark:bg-slate-700 p-1 rounded-lg">
                 <button 
                   onClick={() => setIsMapMode(false)}
@@ -300,10 +251,10 @@ export default function Plans() {
 
           {isMapMode ? (
             <div className="h-[500px] relative bg-[#e5e7eb] dark:bg-[#1e293b]">
-              <img alt="Map background" className="w-full h-full object-cover opacity-60 dark:opacity-40 mix-blend-multiply dark:mix-blend-screen" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBcqm1NMECgCdZM1kAfv8vQYeOSlZMDsSU4pvlwvQi13XnjaCbPZulVOL2CwV0lDSKHqmKLTL-T5blax4UpwQo6hlLP7154webQXTGSvVLqY4AEJ9I8fkXfnNqO8oxoqdA84vB40JIl8tbiaJwxefiT4UolYX37QCDyzJ7IRB9vFLe7VvB4kp1ftWx44jIw3VEWrjSt4LRTQ-sYCD6Lx4nKUsldhkxQ9ar7M-iDYlD2WvVXTCDHWVVOzKO42UivOeZtSrDBk5LCMIc"/>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="bg-white/90 dark:bg-slate-800/90 backdrop-blur px-4 py-2 rounded-lg shadow-lg border border-border-light dark:border-border-dark text-sm font-medium text-slate-600 dark:text-slate-300">
-                  地图模式预览 (共 {selectedPlan.points.length} 个标记点)
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center text-slate-400">
+                  <span className="material-icons-outlined text-6xl mb-4">map</span>
+                  <p>地图模式预览 (共 {selectedPlan.points.length} 个标记点)</p>
                 </div>
               </div>
             </div>
@@ -314,11 +265,10 @@ export default function Plans() {
                   暂无选点数据
                 </div>
               ) : (
-                selectedPlan.points.map(point => {
+                selectedPlan.points.map((point: any) => {
                   const isExpanded = expandedPoints.includes(point.id);
                   return (
                     <div key={point.id} className="bg-white dark:bg-surface-dark">
-                      {/* Point Header */}
                       <div 
                         className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                         onClick={() => togglePointExpand(point.id)}
@@ -329,13 +279,12 @@ export default function Plans() {
                           </span>
                           <div>
                             <h3 className="font-bold text-slate-900 dark:text-white text-sm">{point.name}</h3>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{point.location} · 包含 {point.slots.length} 个广告位</p>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{point.location} · 包含 {point.slots?.length || 0} 个广告位</p>
                           </div>
                         </div>
                         <span className="text-xs font-mono text-slate-400">{point.id}</span>
                       </div>
                       
-                      {/* Ad Slots (Level 2) */}
                       {isExpanded && (
                         <div className="bg-slate-50 dark:bg-slate-800/30 border-t border-border-light dark:border-border-dark p-4 pl-12">
                           <table className="w-full text-left">
@@ -348,7 +297,7 @@ export default function Plans() {
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-border-light dark:divide-border-dark">
-                              {point.slots.map(slot => (
+                              {point.slots?.map((slot: any) => (
                                 <tr key={slot.id} className="text-sm">
                                   <td className="py-3 font-mono text-xs text-slate-500">{slot.id}</td>
                                   <td className="py-3 font-medium text-slate-800 dark:text-slate-200">{slot.name}</td>
@@ -357,7 +306,7 @@ export default function Plans() {
                                       可售
                                     </span>
                                   </td>
-                                  <td className="py-3 text-right text-slate-600 dark:text-slate-300">¥ {slot.price.toLocaleString()}</td>
+                                  <td className="py-3 text-right text-slate-600 dark:text-slate-300">¥ {slot.price?.toLocaleString()}</td>
                                 </tr>
                               ))}
                             </tbody>
@@ -398,6 +347,39 @@ export default function Plans() {
       </div>
     );
   };
+
+  if (loading) {
+    return (
+      <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-slate-500 dark:text-slate-400">加载方案数据中...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">
+        <Sidebar />
+        <main className="flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0B1120] relative items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-500 mb-4">{error}</p>
+            <button 
+              onClick={loadPlansData}
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+            >
+              重新加载
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background-light dark:bg-background-dark text-slate-800 dark:text-slate-200 font-body transition-colors duration-200 antialiased h-screen flex overflow-hidden">

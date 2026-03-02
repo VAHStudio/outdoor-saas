@@ -38,6 +38,14 @@
   --font-body: "Inter", "Noto Sans SC", sans-serif;
 }
 
+@layer base {
+  /* 强制桌面端最小宽度，防止响应式变为移动端布局 */
+  html, body, #root {
+    min-width: 1280px;
+    overflow-x: auto;
+  }
+}
+
 @layer utilities {
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
