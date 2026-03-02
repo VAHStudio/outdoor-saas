@@ -33,6 +33,11 @@ mybatis:
     default-executor-type: simple
     default-statement-timeout: 25000
 
+# 测试数据生成配置
+test:
+  data:
+    generate: false  # 设置为true启用测试数据生成
+
 # 日志配置
 logging:
   level:
