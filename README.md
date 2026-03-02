@@ -72,13 +72,13 @@ cd advertising-system
 
 ```bash
 # Linux/Mac
-export DB_URL=jdbc:mysql://121.40.166.153:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+export DB_URL=jdbc:mysql://your_server_ip:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
 export DB_USERNAME=root
 export DB_PASSWORD=your_password_here
 export KIMI_API_KEY=your_kimi_api_key_here
 
 # Windows CMD
-set DB_URL=jdbc:mysql://121.40.166.153:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+set DB_URL=jdbc:mysql://your_server_ip:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
 set DB_USERNAME=root
 set DB_PASSWORD=your_password_here
 set KIMI_API_KEY=your_kimi_api_key_here
@@ -91,9 +91,9 @@ set KIMI_API_KEY=your_kimi_api_key_here
 ```yaml
 spring:
   datasource:
-    url: jdbc:mysql://121.40.166.153:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: your_password_here
+    url: jdbc:mysql://your_server_ip:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: your_username
+    password: your_password
 
 kimi:
   api:
@@ -180,9 +180,9 @@ java -jar target/advertising-system-1.0.0.jar
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://121.40.166.153:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-    username: root
-    password: poiu0987@#
+    url: jdbc:mysql://your_server_ip:3306/mvp?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: your_username
+    password: your_password
     hikari:
       minimum-idle: 5              # 最小空闲连接数
       maximum-pool-size: 20        # 最大连接池大小
@@ -197,9 +197,9 @@ spring:
 
 | 参数 | 说明 | 示例值 |
 |------|------|--------|
-| `url` | 数据库连接URL | `jdbc:mysql://121.40.166.153:3306/mvp` |
-| `username` | 数据库用户名 | `root` |
-| `password` | 数据库密码 | `poiu0987@#` |
+| `url` | 数据库连接URL | `jdbc:mysql://your_server_ip:3306/mvp` |
+| `username` | 数据库用户名 | `your_username` |
+| `password` | 数据库密码 | `your_password` |
 | `minimum-idle` | 最小空闲连接数 | `5` |
 | `maximum-pool-size` | 最大连接池大小 | `20` |
 | `connection-timeout` | 连接超时时间（毫秒） | `60000` |
@@ -212,7 +212,7 @@ spring:
 # Kimi AI 配置 (Kimi K2.5)
 kimi:
   api:
-    key: sk-gugb1OlYqjuOG7BhZLTCr6drYfnXihQaeoO2KajFMnSEenDs  # API密钥
+    key: your_kimi_api_key  # API密钥
     endpoint: https://api.moonshot.ai/v1/chat/completions      # API端点
     model: kimi-k2.5                                           # 模型名称
     thinking: disabled                                          # 思考模式：enabled/disabled
