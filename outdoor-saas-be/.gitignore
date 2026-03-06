@@ -1,0 +1,58 @@
+# Backend
+/target/
+/.idea/
+*.iml
+*.class
+*.log
+
+# Frontend
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Static resources (auto-generated)
+/src/main/resources/static/
+!/src/main/resources/static/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+application-dev.yml
+application-prod.yml
+application-*.yml
+!application.yml
+!application.yml.template
+*.properties
+!application.properties
+secrets.yml
+credentials.yml
+/.idea/
+/.claude/
+/CLAUDE.md
+/AGENTS.md
+/CLAUDE_CODE_PLUGIN.md
+/e2e/
+/node_modules/
+/e2e-report/
+/package.json
+/package-lock.json
+/playwright.config.ts
+/frontend/postcss.config.js
+/test-results/frontend-AI-户外广告助手---前端应用测试-首页加载正常-chromium/test-failed-1.png
+/docs/
+/.settings/
+/.settings/

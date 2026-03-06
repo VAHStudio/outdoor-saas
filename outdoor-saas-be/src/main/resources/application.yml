@@ -1,0 +1,54 @@
+server:
+  port: ${SERVER_PORT:16000}
+
+spring:
+  application:
+    name: outdoor-saas
+  web:
+    resources:
+      static-locations: classpath:/static/,classpath:/public/
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD}
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 1000
+      connection-timeout: 60000
+      idle-timeout: 300000
+      max-lifetime: 600000
+      connection-test-query: SELECT 1
+      pool-name: HikariPool
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    locations: classpath:db/migration
+    validate-on-migrate: true
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.touhuwai.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+    lazy-loading-enabled: true
+    multiple-result-sets-enabled: true
+    use-column-label: true
+    use-generated-keys: true
+    default-executor-type: simple
+    default-statement-timeout: 25000
+
+# 日志配置
+logging:
+  level:
+    com.touhuwai.mapper: debug
+
+# JWT 配置
+jwt:
+  secret: ${JWT_SECRET:111}
+  expiration: ${JWT_EXPIRATION:86400000}
