@@ -9,4 +9,6 @@ export { default as planFrameService } from './planFrameService';
 export { default as dashboardService } from './dashboardService';
 export { default as agentService } from './agentService';
 export { default as speechService } from './speechService';
+export { default as authService } from './authService';
 export * from './agentService';
+export * from './authService';

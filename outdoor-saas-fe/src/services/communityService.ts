@@ -18,6 +18,8 @@ export interface Community {
   releaseDateBegin?: string;
   releaseDateEnd?: string;
   releaseStatus?: number;
+  coordLat?: number;
+  coordLng?: number;
 }
 
 export interface BarrierGate {

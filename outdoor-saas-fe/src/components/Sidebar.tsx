@@ -1,9 +1,12 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { Icon } from './Icon';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Sidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { name: '工作台', icon: 'dashboard', path: '/' },
@@ -77,13 +80,28 @@ export default function Sidebar() {
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm border-2 border-surface-light dark:border-gray-600">
-            AC
+            {user?.realName?.charAt(0) || user?.username?.charAt(0) || 'U'}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-text-light dark:text-text-dark truncate">Alex Chen</p>
-            <p className="text-xs text-subtext-light dark:text-subtext-dark truncate">销售经理</p>
+            <p className="text-sm font-medium text-text-light dark:text-text-dark truncate">
+              {user?.realName || user?.username || '用户'}
+            </p>
+            <p className="text-xs text-subtext-light dark:text-subtext-dark truncate">
+              {user?.role === 'ADMIN' ? '管理员' :
+               user?.role === 'SALES' ? '销售经理' :
+               user?.role === 'MEDIA' ? '媒介专员' :
+               user?.role === 'ENGINEERING' ? '工程师' :
+               user?.role === 'FINANCE' ? '财务经理' : '用户'}
+            </p>
           </div>
-          <button className="text-subtext-light hover:text-primary dark:text-subtext-dark dark:hover:text-white">
+          <button 
+            onClick={() => {
+              logout();
+              navigate('/login');
+            }}
+            className="text-subtext-light hover:text-primary dark:text-subtext-dark dark:hover:text-white transition-colors"
+            title="退出登录"
+          >
             <Icon name="logout" size={20} />
           </button>
         </div>
