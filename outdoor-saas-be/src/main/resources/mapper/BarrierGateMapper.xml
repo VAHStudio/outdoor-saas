@@ -311,5 +311,161 @@
             AND c.city = #{city}
         </if>
     </select>
-    
+
+    <!-- 根据查询参数查询道闸列表 -->
+    <select id="selectListByParam" resultMap="WithCommunityResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM barrier_gate bg
+        LEFT JOIN community c ON bg.community_id = c.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    bg.gate_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR bg.device_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR bg.door_location LIKE CONCAT('%', #{keyword}, '%')
+                    OR c.building_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="gateNo != null and gateNo != ''">
+                AND bg.gate_no = #{gateNo}
+            </if>
+            <if test="gateNoLike != null and gateNoLike != ''">
+                AND bg.gate_no LIKE CONCAT('%', #{gateNoLike}, '%')
+            </if>
+            <if test="communityId != null">
+                AND bg.community_id = #{communityId}
+            </if>
+            <if test="communityIdList != null and communityIdList.size() > 0">
+                AND bg.community_id IN
+                <foreach collection="communityIdList" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+            <if test="deviceNo != null and deviceNo != ''">
+                AND bg.device_no = #{deviceNo}
+            </if>
+            <if test="deviceNoLike != null and deviceNoLike != ''">
+                AND bg.device_no LIKE CONCAT('%', #{deviceNoLike}, '%')
+            </if>
+            <if test="doorLocation != null and doorLocation != ''">
+                AND bg.door_location = #{doorLocation}
+            </if>
+            <if test="doorLocationLike != null and doorLocationLike != ''">
+                AND bg.door_location LIKE CONCAT('%', #{doorLocationLike}, '%')
+            </if>
+            <if test="devicePosition != null">
+                AND bg.device_position = #{devicePosition}
+            </if>
+            <if test="devicePositionList != null and devicePositionList.size() > 0">
+                AND bg.device_position IN
+                <foreach collection="devicePositionList" item="dp" open="(" separator="," close=")">
+                    #{dp}
+                </foreach>
+            </if>
+            <if test="screenPosition != null">
+                AND bg.screen_position = #{screenPosition}
+            </if>
+            <if test="screenPositionList != null and screenPositionList.size() > 0">
+                AND bg.screen_position IN
+                <foreach collection="screenPositionList" item="sp" open="(" separator="," close=")">
+                    #{sp}
+                </foreach>
+            </if>
+            <if test="lightboxDirection != null">
+                AND bg.lightbox_direction = #{lightboxDirection}
+            </if>
+            <if test="lightboxDirectionList != null and lightboxDirectionList.size() > 0">
+                AND bg.lightbox_direction IN
+                <foreach collection="lightboxDirectionList" item="ld" open="(" separator="," close=")">
+                    #{ld}
+                </foreach>
+            </if>
+            <if test="city != null and city != ''">
+                AND c.city = #{city}
+            </if>
+            <if test="buildingNameLike != null and buildingNameLike != ''">
+                AND c.building_name LIKE CONCAT('%', #{buildingNameLike}, '%')
+            </if>
+        </where>
+        ORDER BY bg.id DESC
+    </select>
+
+    <!-- 根据查询参数统计数量 -->
+    <select id="countByParam" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM barrier_gate bg
+        LEFT JOIN community c ON bg.community_id = c.id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (
+                    bg.gate_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR bg.device_no LIKE CONCAT('%', #{keyword}, '%')
+                    OR bg.door_location LIKE CONCAT('%', #{keyword}, '%')
+                    OR c.building_name LIKE CONCAT('%', #{keyword}, '%')
+                )
+            </if>
+            <if test="gateNo != null and gateNo != ''">
+                AND bg.gate_no = #{gateNo}
+            </if>
+            <if test="gateNoLike != null and gateNoLike != ''">
+                AND bg.gate_no LIKE CONCAT('%', #{gateNoLike}, '%')
+            </if>
+            <if test="communityId != null">
+                AND bg.community_id = #{communityId}
+            </if>
+            <if test="communityIdList != null and communityIdList.size() > 0">
+                AND bg.community_id IN
+                <foreach collection="communityIdList" item="cid" open="(" separator="," close=")">
+                    #{cid}
+                </foreach>
+            </if>
+            <if test="deviceNo != null and deviceNo != ''">
+                AND bg.device_no = #{deviceNo}
+            </if>
+            <if test="deviceNoLike != null and deviceNoLike != ''">
+                AND bg.device_no LIKE CONCAT('%', #{deviceNoLike}, '%')
+            </if>
+            <if test="doorLocation != null and doorLocation != ''">
+                AND bg.door_location = #{doorLocation}
+            </if>
+            <if test="doorLocationLike != null and doorLocationLike != ''">
+                AND bg.door_location LIKE CONCAT('%', #{doorLocationLike}, '%')
+            </if>
+            <if test="devicePosition != null">
+                AND bg.device_position = #{devicePosition}
+            </if>
+            <if test="devicePositionList != null and devicePositionList.size() > 0">
+                AND bg.device_position IN
+                <foreach collection="devicePositionList" item="dp" open="(" separator="," close=")">
+                    #{dp}
+                </foreach>
+            </if>
+            <if test="screenPosition != null">
+                AND bg.screen_position = #{screenPosition}
+            </if>
+            <if test="screenPositionList != null and screenPositionList.size() > 0">
+                AND bg.screen_position IN
+                <foreach collection="screenPositionList" item="sp" open="(" separator="," close=")">
+                    #{sp}
+                </foreach>
+            </if>
+            <if test="lightboxDirection != null">
+                AND bg.lightbox_direction = #{lightboxDirection}
+            </if>
+            <if test="lightboxDirectionList != null and lightboxDirectionList.size() > 0">
+                AND bg.lightbox_direction IN
+                <foreach collection="lightboxDirectionList" item="ld" open="(" separator="," close=")">
+                    #{ld}
+                </foreach>
+            </if>
+            <if test="city != null and city != ''">
+                AND c.city = #{city}
+            </if>
+            <if test="buildingNameLike != null and buildingNameLike != ''">
+                AND c.building_name LIKE CONCAT('%', #{buildingNameLike}, '%')
+            </if>
+        </where>
+    </select>
+
 </mapper>

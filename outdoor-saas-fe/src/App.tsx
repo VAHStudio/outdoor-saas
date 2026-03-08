@@ -16,8 +16,12 @@ import Settings from './pages/Settings';
 import AIAssistant from './components/AIAssistant';
 import Layout from './components/Layout';
 import Communities from './pages/Communities';
+import CommunityDetail from './pages/CommunityDetail';
 import BarrierGates from './pages/BarrierGates';
+import BarrierGateDetail from './pages/BarrierGateDetail';
 import Frames from './pages/Frames';
+import FrameDetail from './pages/FrameDetail';
+import PlanDetail from './pages/PlanDetail';
 import PlanCommunities from './pages/PlanCommunities';
 import PlanBarriers from './pages/PlanBarriers';
 import PlanFrames from './pages/PlanFrames';
@@ -48,8 +52,12 @@ export default function App() {
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/communities" element={<Communities />} />
+              <Route path="/communities/:id" element={<CommunityDetail />} />
               <Route path="/barrier-gates" element={<BarrierGates />} />
+              <Route path="/barrier-gates/:id" element={<BarrierGateDetail />} />
               <Route path="/frames" element={<Frames />} />
+              <Route path="/frames/:id" element={<FrameDetail />} />
+              <Route path="/plans/:id" element={<PlanDetail />} />
               <Route path="/plan-communities" element={<PlanCommunities />} />
               <Route path="/plan-barriers" element={<PlanBarriers />} />
               <Route path="/plan-frames" element={<PlanFrames />} />

@@ -2,6 +2,7 @@
  * 方案管理服务
  */
 import request from './api';
+import type { PlanQueryParam, PageResult } from '../types/query';
 
 export interface Plan {
   id: number;
@@ -12,7 +13,12 @@ export interface Plan {
   releaseDateEnd: string;
   releaseStatus: number;
   salesType: number;
+  mediaType?: number;
   mediaRequirements?: string;
+  salesPerson?: string;
+  sampleImage?: string;
+  budget?: number;
+  estimatedReach?: number;
   createdAt?: string;
   updatedAt?: string;
   barrierCount?: number;
@@ -86,6 +92,20 @@ export const planService = {
     request<any>(`/plan-frame`, {
       method: 'POST',
       body: JSON.stringify({ planId, frameId, ...data }),
+    }),
+
+  // 过滤查询方案列表（不分页）
+  filter: (params: PlanQueryParam) =>
+    request<PageResult<Plan>>('/plan/filter', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  // 过滤查询方案列表（分页）
+  filterPage: (params: PlanQueryParam) =>
+    request<PageResult<Plan>>('/plan/filter/page', {
+      method: 'POST',
+      body: JSON.stringify(params),
     }),
 };
 

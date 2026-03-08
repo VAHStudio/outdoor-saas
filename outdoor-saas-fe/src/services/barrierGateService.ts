@@ -2,6 +2,7 @@
  * 道闸设备管理服务
  */
 import request from './api';
+import type { BarrierGateQueryParam, PageResult } from '../types/query';
 
 export interface BarrierGate {
   id: number;
@@ -16,6 +17,8 @@ export interface BarrierGate {
   releaseDateBegin?: string;
   releaseDateEnd?: string;
   releaseStatus?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const barrierGateService = {
@@ -62,6 +65,20 @@ export const barrierGateService = {
     request<void>('/barrier-gate/batch', {
       method: 'DELETE',
       body: JSON.stringify(ids),
+    }),
+
+  // 过滤查询道闸列表（不分页）
+  filter: (params: BarrierGateQueryParam) =>
+    request<PageResult<BarrierGate>>('/barrier-gate/filter', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  // 过滤查询道闸列表（分页）
+  filterPage: (params: BarrierGateQueryParam) =>
+    request<PageResult<BarrierGate>>('/barrier-gate/filter/page', {
+      method: 'POST',
+      body: JSON.stringify(params),
     }),
 };
 

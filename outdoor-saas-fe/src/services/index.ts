@@ -12,3 +12,4 @@ export { default as speechService } from './speechService';
 export { default as authService } from './authService';
 export * from './agentService';
 export * from './authService';
+export * from '../types/query';

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '../components/Icon';
 import { planService, Plan } from '../services/planService';
+import Pagination from '../components/Pagination';
+import type { PageResult } from '../types/query';
 
 // --- Types ---
 type PlanStatus = 'draft' | 'communicating' | 'pending' | 'signed';
@@ -39,6 +41,7 @@ const mapStatus = (releaseStatus: number): PlanStatus => {
 
 export default function Plans() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<DisplayPlan | null>(null);
   const [isMapMode, setIsMapMode] = useState(false);
   const [expandedPoints, setExpandedPoints] = useState<string[]>([]);
@@ -46,16 +49,41 @@ export default function Plans() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+
   // Load real plans data
   useEffect(() => {
     loadPlansData();
-  }, []);
+  }, [currentPage, pageSize]);
 
   const loadPlansData = async () => {
     try {
       setLoading(true);
-      const plansResponse = await planService.getAllPlans();
-      const plansData = plansResponse;
+      
+      // 使用分页查询代替全量查询
+      const result = await planService.filterPage({
+        pageNum: currentPage,
+        pageSize: pageSize
+      });
+      
+      let plansData: Plan[] = [];
+      let totalCount = 0;
+      
+      // 处理返回结果
+      if (Array.isArray(result)) {
+        plansData = result as Plan[];
+        totalCount = result.length;
+      } else {
+        const pageResult = result as { list: Plan[]; total: number };
+        plansData = pageResult.list || [];
+        totalCount = pageResult.total || 0;
+      }
+      
+      setTotal(totalCount);
       
       // Transform API data to display format
       const displayPlans: DisplayPlan[] = plansData.map(plan => ({
@@ -63,11 +91,11 @@ export default function Plans() {
         title: plan.planName,
         customer: plan.customer,
         status: mapStatus(plan.releaseStatus),
-        budget: 500000, // Mock budget as it's not in the API
+        budget: plan.budget || 500000,
         requirements: plan.mediaRequirements || '暂无需求说明',
-        mediaTypes: ['电梯框架', '道闸'], // Mock media types
+        mediaTypes: ['电梯框架', '道闸'],
         updatedAt: plan.updatedAt ? new Date(plan.updatedAt).toLocaleDateString('zh-CN') : new Date().toLocaleDateString('zh-CN'),
-        points: [], // Will be populated when viewing details
+        points: [],
         mockups: []
       }));
       
@@ -80,7 +108,6 @@ export default function Plans() {
         if (targetPlan) {
           setSelectedPlan(targetPlan);
           setExpandedPoints(targetPlan.points.map(p => p.id));
-          // Clear location state to prevent reopening on refresh
           window.history.replaceState({}, document.title);
         }
       }
@@ -90,6 +117,17 @@ export default function Plans() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 处理页码变化
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // 处理每页条数变化
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
   };
 
   // --- Handlers ---
@@ -153,7 +191,18 @@ export default function Plans() {
                   
                   <div className="flex justify-between items-center pt-3 border-t border-border-light dark:border-border-dark">
                     <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">¥ {(plan.budget / 10000).toFixed(1)}w</span>
-                    <span className="text-[10px] text-slate-400">{plan.updatedAt}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/plans/${plan.id}`);
+                        }}
+                        className="text-[10px] text-primary hover:text-primary/80 transition-colors"
+                      >
+                        查看详情 →
+                      </button>
+                      <span className="text-[10px] text-slate-400">{plan.updatedAt}</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -166,6 +215,65 @@ export default function Plans() {
           </div>
         );
       })}
+    </div>
+  );
+
+  // --- Render List (Table View with Pagination) ---
+  const renderList = () => (
+    <div className="bg-white dark:bg-surface-dark rounded-xl shadow-sm border border-border-light dark:border-border-dark overflow-hidden">
+      <table className="w-full">
+        <thead className="bg-gray-50 dark:bg-gray-800 border-b border-border-light dark:border-border-dark">
+          <tr>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">方案编号</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">方案名称</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">客户</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">状态</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">更新时间</th>
+            <th className="px-6 py-3 text-left text-xs font-semibold text-subtext-light dark:text-subtext-dark uppercase tracking-wider">操作</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border-light dark:divide-border-dark">
+          {plans.map((plan) => (
+            <tr 
+              key={plan.id} 
+              className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+              onClick={() => {
+                setSelectedPlan(plan);
+                setExpandedPoints(plan.points.map(p => p.id));
+              }}
+            >
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-subtext-light dark:text-subtext-dark">{plan.id}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-light dark:text-text-dark">{plan.title}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-subtext-light dark:text-subtext-dark">{plan.customer}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <span className={`px-2 py-1 rounded text-xs font-medium ${columns.find(c => c.id === plan.status)?.color}`}>
+                  {columns.find(c => c.id === plan.status)?.title}
+                </span>
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-subtext-light dark:text-subtext-dark">{plan.updatedAt}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => navigate(`/plans/${plan.id}`)}
+                  className="text-primary hover:text-primary/80 transition-colors"
+                >
+                  查看
+                </button>
+                <button className="text-primary hover:text-primary/80 transition-colors">编辑</button>
+                <button className="text-red-500 hover:text-red-600 transition-colors">删除</button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      
+      {/* 分页组件 */}
+      <Pagination
+        current={currentPage}
+        pageSize={pageSize}
+        total={total}
+        onChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </div>
   );
 
@@ -400,16 +508,43 @@ export default function Plans() {
             返回看板
           </button>
         ) : (
-          <button className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2">
-            <Icon name="add" size={18} />
-            创建方案
-          </button>
+          <div className="flex items-center gap-3">
+            {/* 视图切换按钮 */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+              <button
+                onClick={() => setViewMode('kanban')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors ${
+                  viewMode === 'kanban'
+                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+              >
+                <Icon name="grid_view" size={16} />
+                看板视图
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-1.5 rounded-md text-sm font-medium flex items-center gap-1.5 transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+              >
+                <Icon name="list" size={16} />
+                列表视图
+              </button>
+            </div>
+            <button className="px-4 py-2 bg-primary hover:bg-blue-600 text-white rounded-lg text-sm font-medium shadow-md shadow-blue-500/20 transition-colors flex items-center gap-2">
+              <Icon name="add" size={18} />
+              创建方案
+            </button>
+          </div>
         )}
       </div>
 
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
-          {selectedPlan ? renderDetails() : renderKanban()}
+          {selectedPlan ? renderDetails() : viewMode === 'kanban' ? renderKanban() : renderList()}
         </div>
       </div>
     </div>

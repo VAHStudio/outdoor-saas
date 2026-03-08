@@ -2,6 +2,7 @@
  * 社区/资源管理服务
  */
 import request from './api';
+import type { CommunityQueryParam, PageResult } from '../types/query';
 
 export interface Community {
   id: number;
@@ -20,6 +21,8 @@ export interface Community {
   releaseStatus?: number;
   coordLat?: number;
   coordLng?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface BarrierGate {
@@ -90,6 +93,20 @@ export const communityService = {
     request<void>('/community/batch', {
       method: 'DELETE',
       body: JSON.stringify(ids),
+    }),
+
+  // 过滤查询社区列表（不分页）
+  filter: (params: CommunityQueryParam) =>
+    request<PageResult<Community>>('/community/filter', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  // 过滤查询社区列表（分页）
+  filterPage: (params: CommunityQueryParam) =>
+    request<PageResult<Community>>('/community/filter/page', {
+      method: 'POST',
+      body: JSON.stringify(params),
     }),
 };
 

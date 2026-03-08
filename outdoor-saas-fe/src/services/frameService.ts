@@ -2,6 +2,7 @@
  * 框架媒体管理服务
  */
 import request from './api';
+import type { FrameQueryParam, PageResult } from '../types/query';
 
 export interface Frame {
   id: number;
@@ -15,6 +16,8 @@ export interface Frame {
   releaseDateBegin?: string;
   releaseDateEnd?: string;
   releaseStatus?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export const frameService = {
@@ -61,6 +64,20 @@ export const frameService = {
     request<void>('/frame/batch', {
       method: 'DELETE',
       body: JSON.stringify(ids),
+    }),
+
+  // 过滤查询框架列表（不分页）
+  filter: (params: FrameQueryParam) =>
+    request<PageResult<Frame>>('/frame/filter', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  // 过滤查询框架列表（分页）
+  filterPage: (params: FrameQueryParam) =>
+    request<PageResult<Frame>>('/frame/filter/page', {
+      method: 'POST',
+      body: JSON.stringify(params),
     }),
 };
 

@@ -1,26 +1,61 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { communityService } from '../services/communityService';
 import type { Community } from '../services/communityService';
+import type { PageResult } from '../types/query';
+import Pagination from '../components/Pagination';
 
 export default function Communities() {
+  const navigate = useNavigate();
   const [communities, setCommunities] = useState<Community[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  
+  // 分页状态
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [total, setTotal] = useState(0);
 
   useEffect(() => {
     loadCommunities();
-  }, []);
+  }, [currentPage, pageSize]);
 
   const loadCommunities = async () => {
     try {
       setLoading(true);
-      const data = await communityService.getAll();
-      setCommunities(data);
+      // 使用分页查询代替全量查询
+      const result = await communityService.filterPage({
+        pageNum: currentPage,
+        pageSize: pageSize
+      });
+      
+      // 处理返回结果
+      if (Array.isArray(result)) {
+        // 如果返回的是数组（旧接口），直接使用
+        setCommunities(result);
+        setTotal(result.length);
+      } else {
+        // 如果返回的是 PageResult 对象
+        const pageResult = result as PageResult<Community>;
+        setCommunities(pageResult.list || []);
+        setTotal(pageResult.total || 0);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载失败');
     } finally {
       setLoading(false);
     }
+  };
+
+  // 处理页码变化
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // 处理每页条数变化
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // 重置到第一页
   };
 
   if (loading) {
@@ -62,13 +97,23 @@ export default function Communities() {
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {communities.map((community) => (
-              <tr key={community.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+              <tr 
+                key={community.id} 
+                className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors cursor-pointer"
+                onClick={() => navigate(`/communities/${community.id}`)}
+              >
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-text-light dark:text-text-dark">{community.id}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-text-light dark:text-text-dark">{community.communityNo}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-text-light dark:text-text-dark">{community.buildingName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-subtext-light dark:text-subtext-dark">{community.buildingAddress}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-subtext-light dark:text-subtext-dark">{community.city}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2" onClick={(e) => e.stopPropagation()}>
+                  <button 
+                    className="text-primary hover:text-primary/80 transition-colors"
+                    onClick={() => navigate(`/communities/${community.id}`)}
+                  >
+                    查看
+                  </button>
                   <button className="text-primary hover:text-primary/80 transition-colors">编辑</button>
                   <button className="text-red-500 hover:text-red-600 transition-colors">删除</button>
                 </td>
@@ -76,6 +121,15 @@ export default function Communities() {
             ))}
           </tbody>
         </table>
+
+        {/* 分页组件 */}
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={total}
+          onChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </div>
     </div>
   );
