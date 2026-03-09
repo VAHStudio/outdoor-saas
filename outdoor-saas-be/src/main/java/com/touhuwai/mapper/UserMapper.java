@@ -1,40 +1,66 @@
 package com.touhuwai.mapper;
 
 import com.touhuwai.entity.User;
-import org.apache.ibatis.annotations.*;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户数据访问层
+ * SQL映射配置在 UserMapper.xml 中
  */
 @Mapper
 public interface UserMapper {
 
-    @Select("SELECT * FROM users WHERE id = #{id}")
+    /**
+     * 根据ID查询用户
+     */
     User selectById(Long id);
 
-    @Select("SELECT * FROM users WHERE username = #{username}")
+    /**
+     * 根据用户名查询用户
+     */
     User selectByUsername(String username);
 
-    @Select("SELECT * FROM users WHERE status = 1")
+    /**
+     * 查询所有有效用户
+     */
     List<User> selectAll();
 
-    @Insert("INSERT INTO users (username, password, real_name, email, phone, avatar, role, status) " +
-            "VALUES (#{username}, #{password}, #{realName}, #{email}, #{phone}, #{avatar}, #{role}, #{status})")
-    @Options(useGeneratedKeys = true, keyProperty = "id")
+    /**
+     * 新增用户
+     */
     int insert(User user);
 
-    @Update("UPDATE users SET real_name = #{realName}, email = #{email}, phone = #{phone}, " +
-            "avatar = #{avatar}, role = #{role}, status = #{status} WHERE id = #{id}")
+    /**
+     * 更新用户信息
+     */
     int update(User user);
 
-    @Update("UPDATE users SET password = #{password} WHERE id = #{id}")
+    /**
+     * 更新密码
+     */
     int updatePassword(@Param("id") Long id, @Param("password") String password);
 
-    @Update("UPDATE users SET last_login_at = NOW() WHERE id = #{id}")
+    /**
+     * 更新最后登录时间
+     */
     int updateLastLoginTime(Long id);
 
-    @Delete("DELETE FROM users WHERE id = #{id}")
+    /**
+     * 删除用户
+     */
     int deleteById(Long id);
+
+    /**
+     * 根据条件查询用户列表
+     */
+    List<User> selectByParam(Map<String, Object> param);
+
+    /**
+     * 根据条件统计用户数量
+     */
+    Long countByParam(Map<String, Object> param);
 }
