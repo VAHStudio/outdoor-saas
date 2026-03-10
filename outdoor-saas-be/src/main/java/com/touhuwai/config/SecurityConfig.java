@@ -1,5 +1,6 @@
 package com.touhuwai.config;
 
+import com.touhuwai.security.ApiKeyAuthenticationFilter;
 import com.touhuwai.security.CustomUserDetailsService;
 import com.touhuwai.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
@@ -31,11 +32,14 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
 
     public SecurityConfig(CustomUserDetailsService userDetailsService, 
-                         JwtAuthenticationFilter jwtAuthenticationFilter) {
+                         JwtAuthenticationFilter jwtAuthenticationFilter,
+                         ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) {
         this.userDetailsService = userDetailsService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.apiKeyAuthenticationFilter = apiKeyAuthenticationFilter;
     }
 
     @Bean
@@ -57,12 +61,14 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 // 静态资源公开
                 .requestMatchers("/", "/index.html", "/static/**", "/assets/**").permitAll()
-                // Swagger/OpenAPI 公开（如果后续添加）
-//                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                // Swagger/OpenAPI 公开
+                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/webjars/**", "/v3/api-docs.yaml").permitAll()
                 // 其他所有请求需要认证
                 .anyRequest().authenticated()
             )
             
+            // 添加 API Key 过滤器（在 JWT 之前）
+            .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             // 添加 JWT 过滤器
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

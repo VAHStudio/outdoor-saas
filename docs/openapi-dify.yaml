@@ -6,12 +6,24 @@ info:
     户外广告管理系统 REST API
     用于 Dify AI 助手集成
 
+    ## 鉴权说明
+    本 API 支持 API Key 鉴权方式，用于 Dify 自定义工具等外部系统调用。
+
+    ### 获取 API Key
+    请联系系统管理员获取 API Key。
+
+    ### 使用方式
+    在请求头中添加：`X-API-Key: your-api-key`
+
+    ### Dify 配置
+    在 Dify 中创建自定义工具时：
+    1. 鉴权方式选择 "API Key"
+    2. 鉴权字段填写 `X-API-Key`
+    3. API Key 值填写管理员提供的密钥
+
 servers:
   - url: http://121.40.166.153:16000
     description: 本地开发环境（frp内网穿透）
-
-security:
-  - authorization: [Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0b3VodXdhaSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzczMTE0ODE4LCJleHAiOjE3NzMyMDEyMTh9.e_qpuguVudlfaUY-KF1oHflUusMaEwf1kZN3_spuksxK3PebAI511HGOHBel83fn]
 
 paths:
   # ========== 社区管理 ==========
@@ -571,6 +583,11 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: 请输入 JWT Token，格式：Bearer {token}
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API Key 鉴权，用于 Dify 等外部工具调用。请联系管理员获取 API Key。
 
   schemas:
     # ========== 通用响应 ==========
@@ -895,3 +912,7 @@ components:
         pageSize:
           type: integer
           default: 10
+
+# 全局安全设置
+security:
+  - ApiKeyAuth: [2Tr9KQOgiPM3quemAWXNkEnh1LsHIjcY]

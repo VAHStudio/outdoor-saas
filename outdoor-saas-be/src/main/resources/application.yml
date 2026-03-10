@@ -59,3 +59,8 @@ dify:
   # Dify API 基础 URL（云版：https://api.dify.ai/v1，本地版：http://your-domain/v1）
   base-url: ${DIFY_BASE_URL:http://dify.qianwei.tech/v1}
 
+# API Key 配置（用于 Dify 自定义工具等外部系统调用）
+api:
+  # API Key 用于接口鉴权，建议设置强密码
+  key: ${API_KEY:}
+

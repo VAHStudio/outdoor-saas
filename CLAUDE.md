@@ -121,10 +121,57 @@
 
 ---
 
+## 上下文 (Contexts)
+
+动态系统提示注入上下文，用于不同开发模式：
+
+- `contexts/dev.md` - 开发模式（专注实现和编码）
+- `contexts/research.md` - 研究模式（探索和理解）
+- `contexts/review.md` - 审查模式（代码审查和分析）
+
+## MCP 服务器配置
+
+预配置的 MCP 服务器 (`mcp-configs/mcp-servers.json`)：
+
+| 服务器 | 功能 |
+|--------|------|
+| `github` | GitHub 操作 - PR、issues、repos |
+| `memory` | 跨会话持久化记忆 |
+| `sequential-thinking` | 链式思维推理 |
+| `context7` | 实时文档查询 |
+| `exa-web-search` | Web 搜索和研究 |
+| `filesystem` | 文件系统操作 |
+| `vercel` | Vercel 部署和项目 |
+| `railway` | Railway 部署 |
+| `cloudflare-*` | Cloudflare Workers、文档、可观测性 |
+| `clickhouse` | ClickHouse 分析查询 |
+
+**使用说明**：
+1. 复制需要的服务器配置到 `~/.claude.json`
+2. 替换 `YOUR_*_HERE` 占位符为实际值
+3. 使用 `disabledMcpServers` 在项目配置中禁用不需要的服务器
+4. **注意**：保持启用的 MCP 服务器数量在 10 个以下，以保留上下文窗口
+
+## 项目结构
+
+```
+.claude-plugin/     # 插件清单和元数据
+agents/             # 17 个子代理
+commands/           # 40+ 个命令
+contexts/           # 3 个动态上下文
+hooks/              # 会话和工具钩子
+mcp-configs/        # MCP 服务器配置
+rules/              # 代码规范规则
+scripts/            # 跨平台脚本
+skills/             # 67 个技能
+tests/              # 测试套件
+```
+
 ## 配置
 
-- `.claude/` - Claude 配置
+- `.claude/` - Claude 配置 (用户级)
 - `package-manager.json` - 包管理器配置 (npm)
+- `.claude-plugin/plugin.json` - 插件清单
 
 ---
 
