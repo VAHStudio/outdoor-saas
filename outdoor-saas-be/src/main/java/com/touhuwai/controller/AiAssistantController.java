@@ -2,9 +2,11 @@ package com.touhuwai.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.touhuwai.client.DifyStreamingClient;
+import com.touhuwai.common.Result;
 import com.touhuwai.dto.dify.DifyStreamEvent;
 import com.touhuwai.dto.sse.SseEvent;
 import com.touhuwai.service.AiAssistantService;
+import com.touhuwai.service.AiConversationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -29,6 +31,7 @@ public class AiAssistantController {
 
     private final DifyStreamingClient difyClient;
     private final AiAssistantService aiAssistantService;
+    private final AiConversationService conversationService;
     private final ObjectMapper objectMapper;
     
     /**
@@ -36,13 +39,24 @@ public class AiAssistantController {
      * 前端通过 EventSource 连接
      * 
      * @param message 用户消息
-     * @param conversationId 会话 ID（可选）
+     * @param conversationId 会话 ID（可选，不传则自动关联用户当前活跃会话）
      * @return SSE Emitter
      */
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter streamChat(
             @RequestParam String message,
-            @RequestParam(required = false) String conversationId) {
+            @RequestParam(required = false) String conversationId,
+            @RequestParam(required = false) String userId) {
+        
+        // 获取当前用户ID（优先使用传入的userId，用于API Key鉴权场景）
+        String currentUserId = userId != null && !userId.isEmpty() 
+            ? userId 
+            : getCurrentUserId();
+        
+        // 获取或创建会话（基于用户ID关联对话）
+        // 如果是新会话，返回 null，让 Dify 生成 conversation_id
+        String activeConversationId = conversationService.getOrCreateConversation(
+            currentUserId, conversationId);
         
         // 创建 SSE Emitter，超时 5 分钟
         SseEmitter emitter = new SseEmitter(300_000L);
@@ -53,14 +67,48 @@ public class AiAssistantController {
         
         // 构建上下文
         Map<String, Object> inputs = new HashMap<>();
-        inputs.put("userId", getCurrentUserId());
-        inputs.put("conversationId", conversationId);
+        inputs.put("userId", currentUserId);
+        // 只有存在有效会话ID时才传递给 Dify
+        if (activeConversationId != null && !activeConversationId.isEmpty()) {
+            inputs.put("conversationId", activeConversationId);
+        }
         inputs.put("currentTime", LocalDateTime.now().toString());
+        
+        // 使用 AtomicReference 来在 lambda 中修改值
+        final java.util.concurrent.atomic.AtomicReference<String> currentConversationId = 
+            new java.util.concurrent.atomic.AtomicReference<>(activeConversationId);
+        // 记录原始传入的会话ID，用于检测会话是否变更
+        final String originalConversationId = activeConversationId;
         
         try {
             // 启动流式处理
             difyClient.streamChat(message, inputs, event -> {
-                handleDifyEvent(emitterId, emitter, event);
+                // 如果事件包含 conversation_id，检查是否需要更新
+                if (event.getConversationId() != null 
+                    && !event.getConversationId().isEmpty()) {
+                    String difyConversationId = event.getConversationId();
+                    String currentId = currentConversationId.get();
+                    
+                    // 情况1：之前没有会话ID，保存新的
+                    if (currentId == null) {
+                        currentConversationId.set(difyConversationId);
+                        conversationService.saveConversationMapping(currentUserId, difyConversationId);
+                        log.info("保存 Dify 生成的会话ID: userId={}, conversationId={}", 
+                            currentUserId, difyConversationId);
+                    }
+                    // 情况2：会话ID发生了变化（原会话失效，Dify创建了新会话）
+                    else if (!currentId.equals(difyConversationId)) {
+                        log.warn("会话ID变更: old={}, new={}", currentId, difyConversationId);
+                        // 删除旧的映射关系
+                        conversationService.deleteConversation(currentUserId, currentId);
+                        // 保存新的映射关系
+                        currentConversationId.set(difyConversationId);
+                        conversationService.saveConversationMapping(currentUserId, difyConversationId);
+                        log.info("更新会话映射: userId={}, newConversationId={}", 
+                            currentUserId, difyConversationId);
+                    }
+                }
+                handleDifyEvent(emitterId, emitter, event, currentConversationId.get());
             });
         } catch (Exception e) {
             log.error("Failed to start streaming", e);
@@ -81,13 +129,16 @@ public class AiAssistantController {
      * 处理 Dify 事件
      */
     private void handleDifyEvent(String emitterId, SseEmitter emitter,
-                                  DifyStreamEvent event) {
+                                  DifyStreamEvent event, String conversationId) {
         try {
             log.info("[Dify] Received event: type={}, id={}, answer={}",
                 event.getEvent(), event.getMessageId(),
                 event.getAnswer() != null ? event.getAnswer().substring(0, Math.min(50, event.getAnswer().length())) + "..." : "null");
 
             SseEvent sseEvent = convertToSseEvent(event);
+            
+            // 在事件中添加会话ID，让前端知道当前对话的conversation_id
+            sseEvent.setConversationId(conversationId);
 
             // 将对象序列化为 JSON 字符串
             String jsonData = objectMapper.writeValueAsString(sseEvent);
@@ -215,5 +266,45 @@ public class AiAssistantController {
         // 实际项目中应从 SecurityContext 获取
         // todo 从token中获取用户信息
         return "user_" + 1;
+    }
+    
+    /**
+     * 获取用户的所有会话
+     */
+    @GetMapping("/conversations")
+    public Result<?> getConversations(@RequestParam(required = false) String userId) {
+        String currentUserId = userId != null && !userId.isEmpty() 
+            ? userId 
+            : getCurrentUserId();
+        return Result.success(conversationService.getUserConversations(currentUserId));
+    }
+    
+    /**
+     * 创建新会话
+     */
+    @PostMapping("/conversations")
+    public Result<?> createConversation(@RequestParam(required = false) String userId) {
+        String currentUserId = userId != null && !userId.isEmpty() 
+            ? userId 
+            : getCurrentUserId();
+        String conversationId = conversationService.createNewConversation(currentUserId);
+        Map<String, String> result = new HashMap<>();
+        result.put("conversationId", conversationId);
+        result.put("userId", currentUserId);
+        return Result.success("创建成功", result);
+    }
+    
+    /**
+     * 删除会话
+     */
+    @DeleteMapping("/conversations/{conversationId}")
+    public Result<?> deleteConversation(
+            @PathVariable String conversationId,
+            @RequestParam(required = false) String userId) {
+        String currentUserId = userId != null && !userId.isEmpty() 
+            ? userId 
+            : getCurrentUserId();
+        conversationService.deleteConversation(currentUserId, conversationId);
+        return Result.success("删除成功");
     }
 }

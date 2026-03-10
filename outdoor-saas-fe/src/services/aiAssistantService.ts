@@ -1,5 +1,45 @@
 import { API_BASE_URL, getToken } from './api';
-import type { ChatRequest, SseEvent } from '../types/aiAssistant';
+import type { ChatRequest, SseEvent, Conversation } from '../types/aiAssistant';
+
+/**
+ * 从 token 中解析用户 ID
+ * @param token JWT token
+ * @returns 用户 ID
+ */
+export function getUserIdFromToken(token: string | null): string | null {
+  if (!token) return null;
+  try {
+    // JWT token 格式: header.payload.signature
+    const payload = token.split('.')[1];
+    if (!payload) return null;
+    
+    // Base64 解码
+    const decoded = JSON.parse(atob(payload));
+    return decoded.userId || decoded.sub || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 获取当前用户 ID
+ * 优先从 token 解析，其次从 localStorage 获取
+ */
+export function getCurrentUserId(): string | null {
+  const token = getToken();
+  const userId = getUserIdFromToken(token);
+  if (userId) return userId;
+  
+  // 备选：从 localStorage 获取
+  return localStorage.getItem('ai_user_id');
+}
+
+/**
+ * 保存用户 ID
+ */
+export function saveUserId(userId: string): void {
+  localStorage.setItem('ai_user_id', userId);
+}
 
 /**
  * 创建 SSE EventSource 连接
@@ -18,11 +58,19 @@ export function createEventSource(request: ChatRequest): EventSource {
     params.append('token', token);
   }
   
+  // 添加用户 ID（用于关联对话历史）
+  const userId = request.userId || getCurrentUserId();
+  if (userId) {
+    params.append('userId', userId);
+  }
+  
+  // 添加会话 ID（可选，不传则自动关联用户当前活跃会话）
   if (request.conversationId) {
     params.append('conversationId', request.conversationId);
   }
 
   const url = `${API_BASE_URL}/ai-assistant/stream?${params.toString()}`;
+  console.log('[AI Service] Creating EventSource:', url);
   return new EventSource(url);
 }
 
@@ -58,10 +106,87 @@ export function parseSseEvent(data: string): SseEvent | null {
   }
 }
 
+/**
+ * 获取用户的所有会话
+ */
+export async function getConversations(userId?: string): Promise<Conversation[]> {
+  const params = new URLSearchParams();
+  if (userId) {
+    params.append('userId', userId);
+  }
+  
+  const url = `${API_BASE_URL}/ai-assistant/conversations?${params.toString()}`;
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${getToken() || ''}`,
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch conversations: ${response.status}`);
+  }
+  
+  const result = await response.json();
+  return result.data || [];
+}
+
+/**
+ * 创建新会话
+ */
+export async function createConversation(userId?: string): Promise<{ conversationId: string; userId: string }> {
+  const params = new URLSearchParams();
+  if (userId) {
+    params.append('userId', userId);
+  }
+  
+  const url = `${API_BASE_URL}/ai-assistant/conversations?${params.toString()}`;
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${getToken() || ''}`,
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to create conversation: ${response.status}`);
+  }
+  
+  const result = await response.json();
+  return result.data;
+}
+
+/**
+ * 删除会话
+ */
+export async function deleteConversation(conversationId: string, userId?: string): Promise<void> {
+  const params = new URLSearchParams();
+  if (userId) {
+    params.append('userId', userId);
+  }
+  
+  const url = `${API_BASE_URL}/ai-assistant/conversations/${conversationId}?${params.toString()}`;
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${getToken() || ''}`,
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to delete conversation: ${response.status}`);
+  }
+}
+
 export default {
   createEventSource,
   getConversationId,
   saveConversationId,
   clearConversationId,
   parseSseEvent,
+  getUserIdFromToken,
+  getCurrentUserId,
+  saveUserId,
+  getConversations,
+  createConversation,
+  deleteConversation,
 };

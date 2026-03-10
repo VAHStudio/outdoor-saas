@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import type { Ref } from 'vue';
-import { createEventSource, saveConversationId } from '@/src/services/aiAssistantService';
+import { createEventSource, saveConversationId, getCurrentUserId, saveUserId } from '@/src/services/aiAssistantService';
 import type { SseEvent } from '@/src/types/aiAssistant';
 import type { ChatMessage, ToolCallInfo } from './useAiStreaming.types';
 
@@ -14,9 +14,11 @@ export interface UseAiStreamingReturn {
   messages: ChatMessage[];
   isStreaming: boolean;
   currentTool: ToolCallInfo | null;
-  sendMessage: (content: string) => void;
+  currentConversationId: string | null;
+  sendMessage: (content: string, conversationId?: string) => void;
   stopStreaming: () => void;
   clearMessages: () => void;
+  setConversationId: (id: string | null) => void;
 }
 
 /**
@@ -26,13 +28,22 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
   const messages = ref<ChatMessage[]>([]);
   const isStreaming = ref(false);
   const currentTool = ref<ToolCallInfo | null>(null);
+  const currentConversationId = ref<string | null>(null);
 
   // Refs for internal state
   let eventSource: EventSource | null = null;
   let assistantMessageId = '';
   let pendingMessage: string | null = null;
+  
+  // 设置当前会话ID
+  const setConversationId = (id: string | null) => {
+    currentConversationId.value = id;
+    if (id) {
+      saveConversationId(id);
+    }
+  };
 
-  const sendMessage = (content: string) => {
+  const sendMessage = (content: string, conversationId?: string) => {
     if (isStreaming.value) {
       console.log('[AI] Cannot send while streaming');
       return;
@@ -60,9 +71,19 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
       eventSource.close();
     }
 
+    // 获取当前用户ID
+    const userId = getCurrentUserId();
+    if (userId) {
+      saveUserId(userId);
+    }
+
     // Create new EventSource
     console.log('[AI] Creating EventSource...');
-    eventSource = createEventSource({ message: content });
+    eventSource = createEventSource({ 
+      message: content, 
+      userId: userId || undefined,
+      conversationId 
+    });
     console.log('[AI] EventSource created, URL:', eventSource.url);
 
     // Event handlers
@@ -92,9 +113,16 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
         return;
       }
 
-      if (event.lastEventId) {
-        console.log('[AI] Saving conversation ID:', event.lastEventId);
+      // 从事件数据中获取会话ID
+      if (data.conversationId) {
+        console.log('[AI] Saving conversation ID from data:', data.conversationId);
+        saveConversationId(data.conversationId);
+        currentConversationId.value = data.conversationId;
+      } else if (event.lastEventId) {
+        // 备选：从 event.lastEventId 获取
+        console.log('[AI] Saving conversation ID from lastEventId:', event.lastEventId);
         saveConversationId(event.lastEventId);
+        currentConversationId.value = event.lastEventId;
       }
 
       handleSseData(data);
@@ -219,15 +247,19 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
 
   const clearMessages = () => {
     messages.value = [];
+    // 清除对话ID，下次将创建新会话
+    localStorage.removeItem('ai_conversation_id');
   };
 
   return {
     messages,
     isStreaming,
     currentTool,
+    currentConversationId,
     sendMessage,
     stopStreaming,
     clearMessages,
+    setConversationId,
   };
 }
 

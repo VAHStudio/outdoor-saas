@@ -15,6 +15,7 @@ export interface SseEvent {
   tool_response?: any;  // Dify 原始字段
   navigation?: NavigationAction;
   error?: string;
+  conversationId?: string;  // 会话ID，用于关联对话历史
 }
 
 // 工具调用信息
@@ -65,5 +66,18 @@ export interface AiAssistantResponse {
 // 聊天请求
 export interface ChatRequest {
   message: string;
+  userId?: string;
   conversationId?: string;
+}
+
+// 会话信息
+export interface Conversation {
+  id: number;
+  userId: string;
+  conversationId: string;
+  title?: string;
+  status: number;
+  createdAt: string;
+  updatedAt: string;
+  lastMessageAt: string;
 }

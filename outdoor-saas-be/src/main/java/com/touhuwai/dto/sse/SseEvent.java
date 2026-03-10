@@ -56,6 +56,11 @@ public class SseEvent implements Serializable {
     private String error;
     
     /**
+     * 会话ID，用于关联对话历史
+     */
+    private String conversationId;
+    
+    /**
      * 工具调用信息
      */
     @Data

@@ -48,13 +48,17 @@ public class DifyStreamingClient {
             ? (String) inputs.get("conversationId") 
             : null;
         
-        DifyChatRequest request = DifyChatRequest.builder()
-            .query(query)
-            .inputs(inputs != null ? inputs : Map.of())
-            .responseMode("streaming")
-            .user(user)
-            .conversationId(conversationId)
-            .build();
+        // 创建请求 builder，用于重试时重建请求
+        java.util.function.Function<String, DifyChatRequest> buildRequest = (convId) -> 
+            DifyChatRequest.builder()
+                .query(query)
+                .inputs(inputs != null ? inputs : Map.of())
+                .responseMode("streaming")
+                .user(user)
+                .conversationId(convId)
+                .build();
+        
+        DifyChatRequest request = buildRequest.apply(conversationId);
         
         log.info("Sending request to Dify: query={}, user={}, conversationId={}", 
             query, user, conversationId);
@@ -63,8 +67,36 @@ public class DifyStreamingClient {
         String apiUrl = difyConfig.getBaseUrl() + "/chat-messages";
         log.info("Dify API URL: {}", apiUrl);
 
-        // Todo 发送消息时携带用户token, 用于Dify Agent 使用工具执行接口时携带token
-        webClient.post()
+        // 构建请求流，支持重试
+        Flux<DifyStreamEvent> eventStream = createEventStream(apiUrl, request)
+            .onErrorResume(e -> {
+                // 检查是否是会话不存在的错误
+                if (e.getMessage() != null && 
+                    e.getMessage().contains("Conversation Not Exists") &&
+                    conversationId != null) {
+                    log.warn("Conversation {} not found on Dify, retrying with new conversation", 
+                        conversationId);
+                    // 重试：不带 conversationId
+                    DifyChatRequest newRequest = buildRequest.apply(null);
+                    return createEventStream(apiUrl, newRequest);
+                }
+                // 其他错误，继续传播
+                return Mono.error(e);
+            });
+        
+        // 订阅并消费事件
+        eventStream.subscribe(
+            consumer,
+            error -> log.error("Dify streaming fatal error", error),
+            () -> log.debug("Dify streaming completed")
+        );
+    }
+    
+    /**
+     * 创建事件流
+     */
+    private Flux<DifyStreamEvent> createEventStream(String apiUrl, DifyChatRequest request) {
+        return webClient.post()
             .uri(apiUrl)
             .header("Authorization", "Bearer " + difyConfig.getApiKey())
             .contentType(MediaType.APPLICATION_JSON)
@@ -94,16 +126,7 @@ public class DifyStreamingClient {
                     log.warn("Error parsing line: {}", line, e);
                     return Mono.empty();
                 }
-            })
-            .onErrorResume(e -> {
-                log.error("Stream error, continuing...", e);
-                return Mono.empty();
-            })
-            .subscribe(
-                consumer,
-                error -> log.error("Dify streaming fatal error", error),
-                () -> log.debug("Dify streaming completed")
-            );
+            });
     }
     
     /**
@@ -122,6 +145,31 @@ public class DifyStreamingClient {
             ? (String) inputs.get("conversationId") 
             : null;
         
+        String apiUrl = difyConfig.getBaseUrl() + "/chat-messages";
+        log.info("Sending sync request to Dify: URL={}, query={}", apiUrl, query);
+        
+        try {
+            return executeSyncRequest(apiUrl, query, inputs, user, conversationId, false);
+        } catch (Exception e) {
+            // 检查是否是会话不存在的错误
+            if (e.getMessage() != null && 
+                e.getMessage().contains("Conversation Not Exists") &&
+                conversationId != null) {
+                log.warn("Conversation {} not found on Dify, retrying with new conversation", 
+                    conversationId);
+                // 重试时不传 conversationId，让 Dify 创建新会话
+                return executeSyncRequest(apiUrl, query, inputs, user, null, true);
+            }
+            log.error("Dify sync request failed", e);
+            throw e;
+        }
+    }
+    
+    /**
+     * 执行同步请求
+     */
+    private String executeSyncRequest(String apiUrl, String query, Map<String, Object> inputs,
+                                     String user, String conversationId, boolean isRetry) {
         DifyChatRequest request = DifyChatRequest.builder()
             .query(query)
             .inputs(inputs != null ? inputs : Map.of())
@@ -130,25 +178,30 @@ public class DifyStreamingClient {
             .conversationId(conversationId)
             .build();
         
-        String apiUrl = difyConfig.getBaseUrl() + "/chat-messages";
-        log.info("Sending sync request to Dify: URL={}, query={}", apiUrl, query);
+        String response = webClient.post()
+            .uri(apiUrl)
+            .header("Authorization", "Bearer " + difyConfig.getApiKey())
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(request)
+            .retrieve()
+            .onStatus(
+                status -> status.isError(),
+                clientResponse -> clientResponse.bodyToMono(String.class)
+                    .flatMap(errorBody -> {
+                        log.error("Dify API error: {} - {}", clientResponse.statusCode(), errorBody);
+                        return Mono.error(new RuntimeException(
+                            "Dify API error: " + clientResponse.statusCode() + " - " + errorBody));
+                    })
+            )
+            .bodyToMono(String.class)
+            .block();
         
-        try {
-            String response = webClient.post()
-                .uri(apiUrl)
-                .header("Authorization", "Bearer " + difyConfig.getApiKey())
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(String.class)
-                .block();
-            
+        if (isRetry) {
+            log.info("Dify sync retry response: {}", response);
+        } else {
             log.info("Dify sync response: {}", response);
-            return response;
-        } catch (Exception e) {
-            log.error("Dify sync request failed", e);
-            throw e;
         }
+        return response;
     }
 
     /**
