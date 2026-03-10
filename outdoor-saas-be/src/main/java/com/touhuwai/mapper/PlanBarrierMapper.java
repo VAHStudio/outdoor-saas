@@ -1,5 +1,6 @@
 package com.touhuwai.mapper;
 
+import com.touhuwai.dto.param.PlanBarrierQueryParam;
 import com.touhuwai.entity.PlanBarrier;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -133,4 +134,11 @@ public interface PlanBarrierMapper {
      * @return 数量
      */
     int countByPlanId(Integer planId);
+
+    /**
+     * 根据查询参数查询方案道闸明细列表（带关联信息）
+     * @param param 查询参数
+     * @return 方案道闸明细列表
+     */
+    List<PlanBarrier> selectByParam(PlanBarrierQueryParam param);
 }

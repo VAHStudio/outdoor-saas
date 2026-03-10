@@ -2,6 +2,7 @@
  * 方案社区关联服务
  */
 import request from './api';
+import type { PageResult } from '../types/query';
 
 export interface PlanCommunity {
   id: number;
@@ -23,6 +24,13 @@ export interface PlanCommunity {
   };
 }
 
+export interface PlanCommunityQueryParam {
+  pageNum?: number;
+  pageSize?: number;
+  planId?: number;
+  communityId?: number;
+}
+
 export const planCommunityService = {
   // 获取所有方案社区关联
   getAll: () => request<PlanCommunity[]>('/plan-community/list'),
@@ -34,11 +42,11 @@ export const planCommunityService = {
   getByPlanAndCommunity: (planId: number, communityId: number) =>
     request<PlanCommunity>(`/plan-community/query?planId=${planId}&communityId=${communityId}`),
 
-  // 分页查询
-  getPage: (page: number = 1, size: number = 10) =>
-    request<PlanCommunity[]>('/plan-community/page', {
+  // 分页查询（带过滤参数）
+  filterPage: (params: PlanCommunityQueryParam) =>
+    request<PageResult<PlanCommunity>>('/plan-community/filter/page', {
       method: 'POST',
-      body: JSON.stringify({ page, size }),
+      body: JSON.stringify(params),
     }),
 
   // 根据方案ID获取

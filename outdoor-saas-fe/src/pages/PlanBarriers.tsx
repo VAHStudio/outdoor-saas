@@ -1,27 +1,21 @@
-import { useState, useEffect } from 'react';
-import { planBarrierService } from '../services/planBarrierService';
-import type { PlanBarrier } from '../services/planBarrierService';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+import { planBarrierService, type PlanBarrier, type PlanBarrierQueryParam } from '../services/planBarrierService';
 
 export default function PlanBarriers() {
-  const [planBarriers, setPlanBarriers] = useState<PlanBarrier[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    loadPlanBarriers();
-  }, []);
-
-  const loadPlanBarriers = async () => {
-    try {
-      setLoading(true);
-      const data = await planBarrierService.getAll();
-      setPlanBarriers(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: planBarriers,
+    loading,
+    error,
+    currentPage,
+    pageSize,
+    total,
+    setPage,
+    setPageSize,
+  } = usePagination<PlanBarrier, PlanBarrierQueryParam>({
+    fetchFn: planBarrierService.filterPage,
+    defaultPageSize: 10,
+  });
 
   if (loading) {
     return (
@@ -84,6 +78,15 @@ export default function PlanBarriers() {
             ))}
           </tbody>
         </table>
+
+        {/* 分页组件 */}
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={total}
+          onChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
     </div>
   );

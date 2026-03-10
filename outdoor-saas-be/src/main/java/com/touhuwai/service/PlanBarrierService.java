@@ -94,4 +94,11 @@ public interface PlanBarrierService {
      * @return 影响的行数
      */
     int batchDelete(List<Integer> ids);
+    
+    /**
+     * 根据查询参数分页查询方案道闸明细列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    PageResult<PlanBarrier> getPageByParam(com.touhuwai.dto.param.PlanBarrierQueryParam param);
 }

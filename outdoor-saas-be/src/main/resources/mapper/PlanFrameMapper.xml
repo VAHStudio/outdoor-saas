@@ -210,4 +210,81 @@
         WHERE plan_id = #{planId}
     </select>
 
+    <select id="selectByParam" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer,
+               f.frame_no, f.building, f.unit, f.elevator
+        FROM plan_frame pf
+        LEFT JOIN plan p ON pf.plan_id = p.id
+        LEFT JOIN frame f ON pf.frame_id = f.id
+        <where>
+            <if test="planId != null">
+                AND pf.plan_id = #{planId}
+            </if>
+            <if test="planIdList != null and planIdList.size() > 0">
+                AND pf.plan_id IN
+                <foreach collection="planIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="frameId != null">
+                AND pf.frame_id = #{frameId}
+            </if>
+            <if test="frameIdList != null and frameIdList.size() > 0">
+                AND pf.frame_id IN
+                <foreach collection="frameIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="planCommunityId != null">
+                AND pf.plan_community_id = #{planCommunityId}
+            </if>
+            <if test="planCommunityIdList != null and planCommunityIdList.size() > 0">
+                AND pf.plan_community_id IN
+                <foreach collection="planCommunityIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="releaseStatus != null">
+                AND pf.release_status = #{releaseStatus}
+            </if>
+            <if test="releaseStatusList != null and releaseStatusList.size() > 0">
+                AND pf.release_status IN
+                <foreach collection="releaseStatusList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="releaseDateBeginFrom != null">
+                AND pf.release_date_begin &gt;= #{releaseDateBeginFrom}
+            </if>
+            <if test="releaseDateBeginTo != null">
+                AND pf.release_date_begin &lt;= #{releaseDateBeginTo}
+            </if>
+            <if test="releaseDateEndFrom != null">
+                AND pf.release_date_end &gt;= #{releaseDateEndFrom}
+            </if>
+            <if test="releaseDateEndTo != null">
+                AND pf.release_date_end &lt;= #{releaseDateEndTo}
+            </if>
+            <if test="createdAtBegin != null">
+                AND pf.created_at &gt;= #{createdAtBegin}
+            </if>
+            <if test="createdAtEnd != null">
+                AND pf.created_at &lt;= #{createdAtEnd}
+            </if>
+            <if test="updatedAtBegin != null">
+                AND pf.updated_at &gt;= #{updatedAtBegin}
+            </if>
+            <if test="updatedAtEnd != null">
+                AND pf.updated_at &lt;= #{updatedAtEnd}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.plan_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR p.plan_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR f.frame_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY pf.id DESC
+    </select>
+
 </mapper>

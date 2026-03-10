@@ -1,27 +1,21 @@
-import { useState, useEffect } from 'react';
-import { planCommunityService } from '../services/planCommunityService';
-import type { PlanCommunity } from '../services/planCommunityService';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+import { planCommunityService, type PlanCommunity, type PlanCommunityQueryParam } from '../services/planCommunityService';
 
 export default function PlanCommunities() {
-  const [planCommunities, setPlanCommunities] = useState<PlanCommunity[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    loadPlanCommunities();
-  }, []);
-
-  const loadPlanCommunities = async () => {
-    try {
-      setLoading(true);
-      const data = await planCommunityService.getAll();
-      setPlanCommunities(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: planCommunities,
+    loading,
+    error,
+    currentPage,
+    pageSize,
+    total,
+    setPage,
+    setPageSize,
+  } = usePagination<PlanCommunity, PlanCommunityQueryParam>({
+    fetchFn: planCommunityService.filterPage,
+    defaultPageSize: 10,
+  });
 
   if (loading) {
     return (
@@ -76,6 +70,15 @@ export default function PlanCommunities() {
             ))}
           </tbody>
         </table>
+
+        {/* 分页组件 */}
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={total}
+          onChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
     </div>
   );

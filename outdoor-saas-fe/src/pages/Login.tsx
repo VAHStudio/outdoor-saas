@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { Icon } from '../components/Icon';
@@ -161,39 +161,7 @@ export default function Login() {
             </button>
           </form>
 
-          {/* 演示账号 */}
-          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mb-3">演示账号</p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
-                <p className="font-medium text-gray-700 dark:text-gray-300">admin / admin123</p>
-                <p className="text-gray-500">管理员</p>
-              </div>
-              <div className="p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
-                <p className="font-medium text-gray-700 dark:text-gray-300">sales / sales123</p>
-                <p className="text-gray-500">销售经理</p>
-              </div>
-              <div className="p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
-                <p className="font-medium text-gray-700 dark:text-gray-300">media / media123</p>
-                <p className="text-gray-500">媒介专员</p>
-              </div>
-              <div className="p-2 bg-white dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
-                <p className="font-medium text-gray-700 dark:text-gray-300">finance / finance123</p>
-                <p className="text-gray-500">财务经理</p>
-              </div>
-            </div>
-          </div>
 
-          {/* 注册链接 */}
-          <p className="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-            还没有账号？{' '}
-            <Link
-              to="/register"
-              className="text-primary hover:text-primary/80 font-medium transition-colors"
-            >
-              立即注册
-            </Link>
-          </p>
         </div>
 
         {/* 版权信息 */}

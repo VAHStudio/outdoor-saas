@@ -209,4 +209,82 @@
         WHERE plan_id = #{planId}
     </select>
 
+    <select id="selectByParam" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer,
+               bg.gate_no, bg.device_no, bg.door_location
+        FROM plan_barrier pb
+        LEFT JOIN plan p ON pb.plan_id = p.id
+        LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        <where>
+            <if test="planId != null">
+                AND pb.plan_id = #{planId}
+            </if>
+            <if test="planIdList != null and planIdList.size() > 0">
+                AND pb.plan_id IN
+                <foreach collection="planIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="barrierGateId != null">
+                AND pb.barrier_gate_id = #{barrierGateId}
+            </if>
+            <if test="barrierGateIdList != null and barrierGateIdList.size() > 0">
+                AND pb.barrier_gate_id IN
+                <foreach collection="barrierGateIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="planCommunityId != null">
+                AND pb.plan_community_id = #{planCommunityId}
+            </if>
+            <if test="planCommunityIdList != null and planCommunityIdList.size() > 0">
+                AND pb.plan_community_id IN
+                <foreach collection="planCommunityIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="releaseStatus != null">
+                AND pb.release_status = #{releaseStatus}
+            </if>
+            <if test="releaseStatusList != null and releaseStatusList.size() > 0">
+                AND pb.release_status IN
+                <foreach collection="releaseStatusList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="releaseDateBeginFrom != null">
+                AND pb.release_date_begin &gt;= #{releaseDateBeginFrom}
+            </if>
+            <if test="releaseDateBeginTo != null">
+                AND pb.release_date_begin &lt;= #{releaseDateBeginTo}
+            </if>
+            <if test="releaseDateEndFrom != null">
+                AND pb.release_date_end &gt;= #{releaseDateEndFrom}
+            </if>
+            <if test="releaseDateEndTo != null">
+                AND pb.release_date_end &lt;= #{releaseDateEndTo}
+            </if>
+            <if test="createdAtBegin != null">
+                AND pb.created_at &gt;= #{createdAtBegin}
+            </if>
+            <if test="createdAtEnd != null">
+                AND pb.created_at &lt;= #{createdAtEnd}
+            </if>
+            <if test="updatedAtBegin != null">
+                AND pb.updated_at &gt;= #{updatedAtBegin}
+            </if>
+            <if test="updatedAtEnd != null">
+                AND pb.updated_at &lt;= #{updatedAtEnd}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.plan_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR p.plan_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR bg.gate_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR bg.device_no LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY pb.id DESC
+    </select>
+
 </mapper>

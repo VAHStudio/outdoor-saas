@@ -1,5 +1,6 @@
 package com.touhuwai.mapper;
 
+import com.touhuwai.dto.param.PlanCommunityQueryParam;
 import com.touhuwai.entity.PlanCommunity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -109,4 +110,11 @@ public interface PlanCommunityMapper {
      * @return 影响行数
      */
     int deleteByCommunityId(Integer communityId);
+
+    /**
+     * 根据查询参数查询方案社区关联列表（带关联信息）
+     * @param param 查询参数
+     * @return 方案社区关联列表
+     */
+    List<PlanCommunity> selectByParam(PlanCommunityQueryParam param);
 }

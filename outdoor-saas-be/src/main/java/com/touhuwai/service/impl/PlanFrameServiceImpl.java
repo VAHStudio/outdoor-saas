@@ -1,6 +1,7 @@
 package com.touhuwai.service.impl;
 
 import com.touhuwai.common.PageResult;
+import com.touhuwai.dto.param.PlanFrameQueryParam;
 import com.touhuwai.entity.PlanFrame;
 import com.touhuwai.mapper.PlanFrameMapper;
 import com.touhuwai.service.PlanFrameService;
@@ -127,5 +128,16 @@ public class PlanFrameServiceImpl implements PlanFrameService {
     @Transactional(rollbackFor = Exception.class)
     public int batchDelete(List<Integer> ids) {
         return planFrameMapper.batchDelete(ids);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PageResult<PlanFrame> getPageByParam(PlanFrameQueryParam param) {
+        PageHelper.startPage(param.getPageNum(), param.getPageSize());
+        List<PlanFrame> list = planFrameMapper.selectByParam(param);
+        PageInfo<PlanFrame> pageInfo = new PageInfo<>(list);
+        return PageResult.build(pageInfo.getPageNum(), pageInfo.getPageSize(), pageInfo.getTotal(), list);
     }
 }

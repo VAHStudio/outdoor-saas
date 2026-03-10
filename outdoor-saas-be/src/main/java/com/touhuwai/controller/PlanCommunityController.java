@@ -182,4 +182,15 @@ public class PlanCommunityController {
         }
         return Result.error("批量删除失败");
     }
+    
+    /**
+     * 根据查询参数分页查询方案社区关联列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    @PostMapping("/filter/page")
+    public Result<PageResult<PlanCommunity>> getPageByParam(@RequestBody com.touhuwai.dto.param.PlanCommunityQueryParam param) {
+        PageResult<PlanCommunity> pageResult = planCommunityService.getPageByParam(param);
+        return Result.success(pageResult);
+    }
 }

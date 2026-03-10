@@ -1,6 +1,7 @@
 package com.touhuwai.service.impl;
 
 import com.touhuwai.common.PageResult;
+import com.touhuwai.dto.param.PlanCommunityQueryParam;
 import com.touhuwai.entity.PlanCommunity;
 import com.touhuwai.mapper.PlanCommunityMapper;
 import com.touhuwai.service.PlanCommunityService;
@@ -119,5 +120,16 @@ public class PlanCommunityServiceImpl implements PlanCommunityService {
     @Transactional(rollbackFor = Exception.class)
     public int batchDelete(List<Integer> ids) {
         return planCommunityMapper.batchDelete(ids);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PageResult<PlanCommunity> getPageByParam(PlanCommunityQueryParam param) {
+        PageHelper.startPage(param.getPageNum(), param.getPageSize());
+        List<PlanCommunity> list = planCommunityMapper.selectByParam(param);
+        PageInfo<PlanCommunity> pageInfo = new PageInfo<>(list);
+        return PageResult.build(pageInfo.getPageNum(), pageInfo.getPageSize(), pageInfo.getTotal(), list);
     }
 }

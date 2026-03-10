@@ -190,4 +190,15 @@ public class PlanBarrierController {
         }
         return Result.error("批量删除失败");
     }
+    
+    /**
+     * 根据查询参数分页查询方案道闸明细列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    @PostMapping("/filter/page")
+    public Result<PageResult<PlanBarrier>> getPageByParam(@RequestBody com.touhuwai.dto.param.PlanBarrierQueryParam param) {
+        PageResult<PlanBarrier> pageResult = planBarrierService.getPageByParam(param);
+        return Result.success(pageResult);
+    }
 }

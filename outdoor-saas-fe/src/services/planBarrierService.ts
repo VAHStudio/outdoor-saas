@@ -2,6 +2,7 @@
  * 方案道闸明细服务
  */
 import request from './api';
+import type { PageResult } from '../types/query';
 
 export interface PlanBarrier {
   id: number;
@@ -27,6 +28,14 @@ export interface PlanBarrier {
   };
 }
 
+export interface PlanBarrierQueryParam {
+  pageNum?: number;
+  pageSize?: number;
+  planId?: number;
+  barrierGateId?: number;
+  releaseStatus?: number;
+}
+
 export const planBarrierService = {
   // 获取所有方案道闸明细
   getAll: () => request<PlanBarrier[]>('/plan-barrier/list'),
@@ -34,11 +43,11 @@ export const planBarrierService = {
   // 根据ID获取
   getById: (id: number) => request<PlanBarrier>(`/plan-barrier/${id}`),
 
-  // 分页查询
-  getPage: (page: number = 1, size: number = 10) =>
-    request<PlanBarrier[]>('/plan-barrier/page', {
+  // 分页查询（带过滤参数）
+  filterPage: (params: PlanBarrierQueryParam) =>
+    request<PageResult<PlanBarrier>>('/plan-barrier/filter/page', {
       method: 'POST',
-      body: JSON.stringify({ page, size }),
+      body: JSON.stringify(params),
     }),
 
   // 根据方案ID获取

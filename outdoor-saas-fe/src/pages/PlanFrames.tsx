@@ -1,27 +1,21 @@
-import { useState, useEffect } from 'react';
-import { planFrameService } from '../services/planFrameService';
-import type { PlanFrame } from '../services/planFrameService';
+import Pagination from '../components/Pagination';
+import { usePagination } from '../hooks/usePagination';
+import { planFrameService, type PlanFrame, type PlanFrameQueryParam } from '../services/planFrameService';
 
 export default function PlanFrames() {
-  const [planFrames, setPlanFrames] = useState<PlanFrame[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    loadPlanFrames();
-  }, []);
-
-  const loadPlanFrames = async () => {
-    try {
-      setLoading(true);
-      const data = await planFrameService.getAll();
-      setPlanFrames(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: planFrames,
+    loading,
+    error,
+    currentPage,
+    pageSize,
+    total,
+    setPage,
+    setPageSize,
+  } = usePagination<PlanFrame, PlanFrameQueryParam>({
+    fetchFn: planFrameService.filterPage,
+    defaultPageSize: 10,
+  });
 
   if (loading) {
     return (
@@ -84,6 +78,15 @@ export default function PlanFrames() {
             ))}
           </tbody>
         </table>
+
+        {/* 分页组件 */}
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={total}
+          onChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
       </div>
     </div>
   );

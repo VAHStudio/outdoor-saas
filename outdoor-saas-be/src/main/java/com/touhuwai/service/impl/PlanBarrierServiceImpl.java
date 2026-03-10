@@ -1,6 +1,7 @@
 package com.touhuwai.service.impl;
 
 import com.touhuwai.common.PageResult;
+import com.touhuwai.dto.param.PlanBarrierQueryParam;
 import com.touhuwai.entity.PlanBarrier;
 import com.touhuwai.mapper.PlanBarrierMapper;
 import com.touhuwai.service.PlanBarrierService;
@@ -127,5 +128,16 @@ public class PlanBarrierServiceImpl implements PlanBarrierService {
     @Transactional(rollbackFor = Exception.class)
     public int batchDelete(List<Integer> ids) {
         return planBarrierMapper.batchDelete(ids);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public PageResult<PlanBarrier> getPageByParam(PlanBarrierQueryParam param) {
+        PageHelper.startPage(param.getPageNum(), param.getPageSize());
+        List<PlanBarrier> list = planBarrierMapper.selectByParam(param);
+        PageInfo<PlanBarrier> pageInfo = new PageInfo<>(list);
+        return PageResult.build(pageInfo.getPageNum(), pageInfo.getPageSize(), pageInfo.getTotal(), list);
     }
 }

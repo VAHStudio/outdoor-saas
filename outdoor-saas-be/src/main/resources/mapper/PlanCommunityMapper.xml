@@ -170,5 +170,80 @@
     <delete id="deleteByCommunityId">
         DELETE FROM plan_community WHERE community_id = #{communityId}
     </delete>
-    
+
+    <select id="selectByParam" resultMap="WithRelationsResultMap">
+        SELECT <include refid="Base_Column_List"/>,
+               p.plan_no, p.plan_name, p.customer, p.release_status as plan_release_status,
+               c.community_no, c.building_name, c.building_address, c.city
+        FROM plan_community pc
+        LEFT JOIN plan p ON pc.plan_id = p.id
+        LEFT JOIN community c ON pc.community_id = c.id
+        <where>
+            <if test="planId != null">
+                AND pc.plan_id = #{planId}
+            </if>
+            <if test="planIdList != null and planIdList.size() > 0">
+                AND pc.plan_id IN
+                <foreach collection="planIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="communityId != null">
+                AND pc.community_id = #{communityId}
+            </if>
+            <if test="communityIdList != null and communityIdList.size() > 0">
+                AND pc.community_id IN
+                <foreach collection="communityIdList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="releaseStatus != null">
+                AND pc.release_status = #{releaseStatus}
+            </if>
+            <if test="releaseStatusList != null and releaseStatusList.size() > 0">
+                AND pc.release_status IN
+                <foreach collection="releaseStatusList" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="barrierRequiredQty != null">
+                AND pc.barrier_required_qty = #{barrierRequiredQty}
+            </if>
+            <if test="frameRequiredQty != null">
+                AND pc.frame_required_qty = #{frameRequiredQty}
+            </if>
+            <if test="releaseDateBeginFrom != null">
+                AND pc.release_date_begin &gt;= #{releaseDateBeginFrom}
+            </if>
+            <if test="releaseDateBeginTo != null">
+                AND pc.release_date_begin &lt;= #{releaseDateBeginTo}
+            </if>
+            <if test="releaseDateEndFrom != null">
+                AND pc.release_date_end &gt;= #{releaseDateEndFrom}
+            </if>
+            <if test="releaseDateEndTo != null">
+                AND pc.release_date_end &lt;= #{releaseDateEndTo}
+            </if>
+            <if test="createdAtBegin != null">
+                AND pc.created_at &gt;= #{createdAtBegin}
+            </if>
+            <if test="createdAtEnd != null">
+                AND pc.created_at &lt;= #{createdAtEnd}
+            </if>
+            <if test="updatedAtBegin != null">
+                AND pc.updated_at &gt;= #{updatedAtBegin}
+            </if>
+            <if test="updatedAtEnd != null">
+                AND pc.updated_at &lt;= #{updatedAtEnd}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                AND (p.plan_name LIKE CONCAT('%', #{keyword}, '%')
+                     OR p.plan_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR c.community_no LIKE CONCAT('%', #{keyword}, '%')
+                     OR c.building_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY pc.id DESC
+    </select>
+
 </mapper>

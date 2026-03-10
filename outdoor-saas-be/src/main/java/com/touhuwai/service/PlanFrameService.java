@@ -1,6 +1,7 @@
 package com.touhuwai.service;
 
 import com.touhuwai.common.PageResult;
+import com.touhuwai.dto.param.PlanFrameQueryParam;
 import com.touhuwai.entity.PlanFrame;
 
 import java.util.List;
@@ -94,4 +95,11 @@ public interface PlanFrameService {
      * @return 影响的行数
      */
     int batchDelete(List<Integer> ids);
+
+    /**
+     * 根据查询参数分页查询方案框架明细列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    PageResult<PlanFrame> getPageByParam(PlanFrameQueryParam param);
 }

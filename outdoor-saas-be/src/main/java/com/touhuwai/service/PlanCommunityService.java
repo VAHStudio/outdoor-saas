@@ -1,6 +1,7 @@
 package com.touhuwai.service;
 
 import com.touhuwai.common.PageResult;
+import com.touhuwai.dto.param.PlanCommunityQueryParam;
 import com.touhuwai.entity.PlanCommunity;
 
 import java.util.List;
@@ -88,4 +89,11 @@ public interface PlanCommunityService {
      * @return 影响的行数
      */
     int batchDelete(List<Integer> ids);
+
+    /**
+     * 根据查询参数分页查询方案社区关联列表
+     * @param param 查询参数
+     * @return 分页结果
+     */
+    PageResult<PlanCommunity> getPageByParam(PlanCommunityQueryParam param);
 }
