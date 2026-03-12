@@ -10,6 +10,8 @@ import com.touhuwai.service.AiConversationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -260,12 +262,19 @@ public class AiAssistantController {
     }
     
     /**
-     * 获取当前用户 ID（简化实现）
+     * 从 SecurityContext 获取当前用户 ID
+     * @return 当前用户名
+     * @throws IllegalStateException 如果用户未认证
      */
     private String getCurrentUserId() {
-        // 实际项目中应从 SecurityContext 获取
-        // todo 从token中获取用户信息
-        return "user_" + 1;
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            log.error("用户未认证，无法获取用户ID");
+            throw new IllegalStateException("用户未认证，请先登录");
+        }
+        String userId = authentication.getName();
+        log.debug("获取当前用户ID: {}", userId);
+        return userId;
     }
     
     /**

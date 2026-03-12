@@ -6,6 +6,8 @@ export interface ChatMessage {
   content: string;
   isStreaming?: boolean;
   toolCalls?: ToolCallInfo[];
+  navigation?: NavigationAction;
+  thinkContent?: string[]; // 思考内容数组
 }
 
 export interface ToolCallInfo {

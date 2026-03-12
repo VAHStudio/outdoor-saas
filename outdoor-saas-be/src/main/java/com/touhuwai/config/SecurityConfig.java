@@ -3,6 +3,7 @@ package com.touhuwai.config;
 import com.touhuwai.security.ApiKeyAuthenticationFilter;
 import com.touhuwai.security.CustomUserDetailsService;
 import com.touhuwai.security.JwtAuthenticationFilter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,15 +18,18 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Spring Security 配置类
  */
+@Slf4j
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -34,7 +38,19 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
 
-    public SecurityConfig(CustomUserDetailsService userDetailsService, 
+    @Value("${cors.allowed-origins:*}")
+    private String allowedOrigins;
+
+    @Value("${cors.allowed-methods:GET,POST,PUT,DELETE,OPTIONS}")
+    private String allowedMethods;
+
+    @Value("${cors.allowed-headers:*}")
+    private String allowedHeaders;
+
+    @Value("${cors.allow-credentials:true}")
+    private boolean allowCredentials;
+
+    public SecurityConfig(CustomUserDetailsService userDetailsService,
                          JwtAuthenticationFilter jwtAuthenticationFilter,
                          ApiKeyAuthenticationFilter apiKeyAuthenticationFilter) {
         this.userDetailsService = userDetailsService;
@@ -79,12 +95,31 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+
+        // 解析允许的源
+        List<String> origins = Arrays.asList(allowedOrigins.split(","));
+        if (origins.contains("*")) {
+            // 开发环境允许所有源
+            configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+            log.warn("CORS配置为允许所有来源(*)，建议生产环境配置具体域名");
+        } else {
+            // 生产环境使用具体域名
+            configuration.setAllowedOrigins(origins);
+        }
+
+        // 解析允许的方法
+        configuration.setAllowedMethods(Arrays.asList(allowedMethods.split(",")));
+
+        // 解析允许的请求头
+        if (allowedHeaders.equals("*")) {
+            configuration.setAllowedHeaders(Arrays.asList("*"));
+        } else {
+            configuration.setAllowedHeaders(Arrays.asList(allowedHeaders.split(",")));
+        }
+
+        configuration.setAllowCredentials(allowCredentials);
         configuration.setMaxAge(3600L);
-        
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

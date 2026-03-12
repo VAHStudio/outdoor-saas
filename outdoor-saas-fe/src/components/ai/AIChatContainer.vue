@@ -106,14 +106,70 @@ const router = useRouter();
 const input = ref('');
 const messagesEndRef = ref<HTMLDivElement>();
 
-// Navigation handler
+// 有效的内部路由列表（用于安全验证）
+const validRoutes = [
+  '/',
+  '/plans',
+  '/plan',
+  '/communities',
+  '/community',
+  '/frames',
+  '/frame',
+  '/barrier-gates',
+  '/barrier-gate',
+  '/plan-communities',
+  '/plan-frames',
+  '/plan-barriers',
+  '/ai-assistant',
+];
+
+// Navigation handler with validation and params support
 const handleNavigation = (nav: NavigationAction) => {
+  // Show message if provided
   if (nav.message) {
     showToast('info', nav.message);
   }
+
   if (nav.action === 'navigate' && nav.target) {
-    router.push(nav.target);
+    // Security: Validate target to prevent external links
+    if (nav.target.startsWith('http') || nav.target.startsWith('//')) {
+      console.warn('[AI Navigation] 外部链接跳转被阻止:', nav.target);
+      showToast('error', '不支持跳转到外部链接');
+      return;
+    }
+
+    // Security: Validate target is in allowed routes
+    const isValidRoute = validRoutes.some(route => nav.target.startsWith(route));
+    if (!isValidRoute) {
+      console.warn('[AI Navigation] 无效的路由跳转:', nav.target);
+      showToast('error', '无效的页面跳转');
+      return;
+    }
+
+    // Build route location with params
+    const routeLocation: { path: string; query?: Record<string, string> } = {
+      path: nav.target,
+    };
+
+    // Add query params if provided
+    if (nav.params && Object.keys(nav.params).length > 0) {
+      routeLocation.query = {};
+      for (const [key, value] of Object.entries(nav.params)) {
+        if (value !== null && value !== undefined) {
+          routeLocation.query[key] = String(value);
+        }
+      }
+    }
+
+    try {
+      router.push(routeLocation);
+      console.log('[AI Navigation] 导航成功:', routeLocation);
+    } catch (error) {
+      console.error('[AI Navigation] 路由跳转失败:', error);
+      showToast('error', '页面跳转失败，请重试');
+    }
   }
+
   if (nav.toast) {
     showToast(nav.toast.type, nav.toast.message, nav.toast.duration);
   }

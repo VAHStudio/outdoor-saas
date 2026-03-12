@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import { createEventSource, saveConversationId, getCurrentUserId, saveUserId } from '@/src/services/aiAssistantService';
-import type { SseEvent } from '@/src/types/aiAssistant';
+import type { SseEvent, NavigationAction } from '@/src/types/aiAssistant';
 import type { ChatMessage, ToolCallInfo } from './useAiStreaming.types';
 
 export interface UseAiStreamingOptions {
@@ -146,6 +146,40 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
     };
   };
 
+  /**
+   * 从消息内容中提取 navigation 信息
+   * 解析 Markdown JSON 代码块中的 tool_response.navigation
+   */
+  const extractNavigationFromContent = (content: string): NavigationAction | null => {
+    if (!content) return null;
+    
+    // 匹配 ```json ... ``` 代码块
+    const jsonBlockRegex = /```json\n([\s\S]*?)```/;
+    const match = content.match(jsonBlockRegex);
+    
+    if (!match) return null;
+    
+    try {
+      const jsonStr = match[1].trim();
+      const parsed = JSON.parse(jsonStr);
+      
+      // 检查是否有 tool_response.navigation
+      if (parsed.tool_response?.navigation) {
+        return parsed.tool_response.navigation as NavigationAction;
+      }
+      
+      // 直接检查 navigation
+      if (parsed.navigation) {
+        return parsed.navigation as NavigationAction;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('[AI] 解析内容中的 JSON 失败:', error);
+      return null;
+    }
+  };
+
   const handleSseData = (data: SseEvent) => {
     const targetId = assistantMessageId;
     
@@ -201,7 +235,20 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
       case 'tool_responses':
         currentTool.value = null;
         if (data.navigation) {
-          options.onNavigation?.(data.navigation);
+          try {
+            options.onNavigation?.(data.navigation);
+            console.log('[AI] 导航执行成功:', data.navigation);
+          } catch (error) {
+            console.error('[AI] 导航执行失败:', error);
+            options.onError?.('页面跳转失败');
+          }
+
+          // Record navigation in message for history
+          messages.value = messages.value.map((msg) =>
+            msg.id === targetId
+              ? { ...msg, navigation: data.navigation, isStreaming: false }
+              : msg
+          );
         }
         break;
 
@@ -217,6 +264,23 @@ export function useAiStreaming(options: UseAiStreamingOptions = {}) {
       case 'workflow_finished':
       case 'message_end':
         console.log('[AI] Stream ended');
+        
+        // 在流结束时解析消息内容中的 navigation
+        const targetMessage = messages.value.find(msg => msg.id === targetId);
+        if (targetMessage && targetMessage.role === 'assistant') {
+          const navigation = extractNavigationFromContent(targetMessage.content);
+          if (navigation) {
+            console.log('[AI] 从内容中提取到导航:', navigation);
+            try {
+              options.onNavigation?.(navigation);
+              console.log('[AI] 导航执行成功:', navigation);
+            } catch (error) {
+              console.error('[AI] 导航执行失败:', error);
+              options.onError?.('页面跳转失败');
+            }
+          }
+        }
+        
         messages.value = messages.value.map((msg) =>
           msg.id === targetId ? { ...msg, isStreaming: false } : msg
         );
