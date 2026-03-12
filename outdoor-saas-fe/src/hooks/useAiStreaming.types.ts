@@ -1,5 +1,14 @@
 import type { NavigationAction } from '@/src/types/aiAssistant';
 
+export interface ActionButton {
+  id: string;
+  label: string;
+  type?: 'primary' | 'secondary' | 'danger';
+  icon?: string;
+  action: string;
+  payload?: Record<string, any>;
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -8,6 +17,7 @@ export interface ChatMessage {
   toolCalls?: ToolCallInfo[];
   thinking?: string; // 思考过程内容
   thinkingTime?: number; // 思考耗时（秒）
+  actions?: ActionButton[]; // 操作按钮
 }
 
 export interface ToolCallInfo {

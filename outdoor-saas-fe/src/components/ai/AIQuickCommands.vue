@@ -1,16 +1,16 @@
 <template>
   <div v-if="commands.length > 0" class="px-6 py-4 border-b border-border-light dark:border-border-dark">
-    <p class="text-xs text-subtext-light dark:text-subtext-dark mb-3">快捷指令</p>
+    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3 font-medium">快捷指令</p>
     <div class="flex flex-wrap gap-2">
       <button
         v-for="cmd in commands"
         :key="cmd.command"
         @click="$emit('select', cmd.command)"
         :disabled="disabled"
-        class="px-3 py-1.5 bg-surface-light dark:bg-surface-dark border border-border-light dark:border-border-dark rounded-lg text-sm hover:border-primary hover:text-primary transition-colors disabled:opacity-50"
+        class="px-3 py-1.5 bg-surface-light dark:bg-surface-dark border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <span class="mr-1">{{ cmd.icon }}</span>
-        {{ cmd.label }}
+        <span class="font-medium">{{ cmd.label }}</span>
       </button>
     </div>
   </div>
