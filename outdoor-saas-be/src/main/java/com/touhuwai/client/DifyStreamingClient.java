@@ -37,11 +37,12 @@ public class DifyStreamingClient {
     public void streamChat(String query, Map<String, Object> inputs, 
                           Consumer<DifyStreamEvent> consumer) {
         
-        // 确保 user 字段有值（Dify 必需）
-        // Todo 从token获取用户ID
-        String user = inputs != null && inputs.get("userId") != null
-                ? (String) inputs.get("userId")
-                : "user_" + 1;
+        // 从 inputs 中获取 userId，必须提供有效的用户ID
+        if (inputs == null || inputs.get("userId") == null) {
+            log.error("调用 streamChat 时必须提供 userId");
+            throw new IllegalArgumentException("用户ID不能为空，请先登录");
+        }
+        String user = (String) inputs.get("userId");
         
         // 获取会话 ID
         String conversationId = inputs != null 
@@ -137,9 +138,12 @@ public class DifyStreamingClient {
      * @return Dify 响应字符串
      */
     public String sendMessageSync(String query, Map<String, Object> inputs) {
-        String user = inputs != null && inputs.get("userId") != null 
-            ? (String) inputs.get("userId") 
-            : "user_" + 1;
+        // 从 inputs 中获取 userId，必须提供有效的用户ID
+        if (inputs == null || inputs.get("userId") == null) {
+            log.error("调用 sendMessageSync 时必须提供 userId");
+            throw new IllegalArgumentException("用户ID不能为空，请先登录");
+        }
+        String user = (String) inputs.get("userId");
         
         String conversationId = inputs != null 
             ? (String) inputs.get("conversationId") 

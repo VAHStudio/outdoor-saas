@@ -1,0 +1,122 @@
+{
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-github-server"
+      ],
+      "env": {
+        "GITHUB_TOKEN": "YOUR_GITHUB_TOKEN_HERE"
+      }
+    },
+    "memory": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-memory-server"
+      ]
+    },
+    "sequential-thinking": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-sequential-thinking-server"
+      ]
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-context7-server"
+      ]
+    },
+    "exa-web-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-exa-server"
+      ],
+      "env": {
+        "EXA_API_KEY": "YOUR_EXA_API_KEY_HERE"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-filesystem-server",
+        "/Users/zongheng/Documents/GitHub/advertising-system"
+      ]
+    },
+    "vercel": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-vercel-server"
+      ],
+      "env": {
+        "VERCEL_TOKEN": "YOUR_VERCEL_TOKEN_HERE"
+      }
+    },
+    "railway": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-railway-server"
+      ],
+      "env": {
+        "RAILWAY_TOKEN": "YOUR_RAILWAY_TOKEN_HERE"
+      }
+    },
+    "cloudflare-workers": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-cloudflare-workers-server"
+      ],
+      "env": {
+        "CLOUDFLARE_API_TOKEN": "YOUR_CLOUDFLARE_API_TOKEN_HERE",
+        "CLOUDFLARE_ACCOUNT_ID": "YOUR_CLOUDFLARE_ACCOUNT_ID_HERE"
+      }
+    },
+    "cloudflare-docs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-cloudflare-docs-server"
+      ]
+    },
+    "cloudflare-observability": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-cloudflare-observability-server"
+      ],
+      "env": {
+        "CLOUDFLARE_API_TOKEN": "YOUR_CLOUDFLARE_API_TOKEN_HERE",
+        "CLOUDFLARE_ACCOUNT_ID": "YOUR_CLOUDFLARE_ACCOUNT_ID_HERE"
+      }
+    },
+    "clickhouse": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic-ai/mcp-clickhouse-server"
+      ],
+      "env": {
+        "CLICKHOUSE_URL": "YOUR_CLICKHOUSE_URL_HERE",
+        "CLICKHOUSE_USERNAME": "YOUR_CLICKHOUSE_USERNAME_HERE",
+        "CLICKHOUSE_PASSWORD": "YOUR_CLICKHOUSE_PASSWORD_HERE"
+      }
+    }
+  },
+  "disabledMcpServers": [
+    "vercel",
+    "railway",
+    "cloudflare-workers",
+    "cloudflare-docs",
+    "cloudflare-observability",
+    "clickhouse"
+  ]
+}

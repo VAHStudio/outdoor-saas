@@ -1,6 +1,27 @@
 # CLAUDE.md - Claude Code 插件使用指南
 
-本项目已集成 Claude Code 插件，提供丰富的 AI 辅助开发能力。
+本项目已集成 **everything-claude-code** 插件，提供完整的 AI 辅助开发能力。
+
+**插件版本**: 1.0.0  
+**状态**: ✅ 已完整集成  
+**最后更新**: 2026-03-12
+
+---
+
+## 快速开始
+
+```bash
+# 1. 验证插件配置
+./scripts/validate.sh
+
+# 2. 运行测试
+./scripts/test.sh
+
+# 3. 设置 MCP 服务器（可选）
+./scripts/setup.sh
+```
+
+---
 
 ---
 

@@ -1,0 +1,90 @@
+{
+  "name": "everything-claude-code",
+  "version": "1.0.0",
+  "description": "Outdoor SaaS 完整 Claude Code 插件集成",
+  "author": "Touhuwai",
+  "license": "MIT",
+  "homepage": "https://claude.ai/code",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ai-zerolab/everything-claude-code"
+  },
+  "engines": {
+    "claude": ">=1.0.0"
+  },
+  "main": "./CLAUDE.md",
+  "activationEvents": [
+    "onCommand",
+    "onFileChange",
+    "onStartup"
+  ],
+  "contributes": {
+    "commands": {
+      "root": "./commands",
+      "count": 40
+    },
+    "agents": {
+      "root": "./agents",
+      "count": 17
+    },
+    "skills": {
+      "root": "./skills",
+      "count": 67
+    },
+    "rules": {
+      "root": "./rules",
+      "languages": ["typescript", "python", "golang", "swift", "common"]
+    },
+    "contexts": {
+      "root": "./contexts",
+      "modes": ["dev", "research", "review"]
+    },
+    "hooks": {
+      "root": "./hooks",
+      "events": ["session", "tool"]
+    },
+    "mcp": {
+      "configPath": "./mcp-configs/mcp-servers.json"
+    }
+  },
+  "config": {
+    "systemPrompt": {
+      "base": "你是一个专业的全栈开发助手，专注于 Outdoor SaaS 广告投放管理系统。",
+      "modes": {
+        "dev": "专注于代码实现，提供清晰、可执行的解决方案。",
+        "research": "专注于探索和理解，提出深入的问题和见解。",
+        "review": "专注于代码审查，找出潜在问题和改进建议。"
+      }
+    },
+    "features": {
+      "autoComplete": true,
+      "codeReview": true,
+      "testGeneration": true,
+      "documentation": true,
+      "refactoring": true
+    },
+    "preferences": {
+      "language": "zh-CN",
+      "codeStyle": "standard",
+      "testFramework": "junit5",
+      "documentationFormat": "markdown"
+    }
+  },
+  "dependencies": {
+    "core": [
+      "planning",
+      "coding",
+      "testing",
+      "reviewing"
+    ],
+    "optional": [
+      "mcp-servers",
+      "context-awareness"
+    ]
+  },
+  "scripts": {
+    "postinstall": "scripts/setup.sh",
+    "validate": "scripts/validate.sh",
+    "test": "scripts/test.sh"
+  }
+}

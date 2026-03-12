@@ -9,11 +9,9 @@ import com.touhuwai.service.PlanService;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.PostConstruct;
 import java.util.List;
 
 /**
@@ -25,35 +23,12 @@ public class PlanServiceImpl implements PlanService {
     private final PlanMapper planMapper;
     private final PlanBarrierMapper planBarrierMapper;
     private final PlanFrameMapper planFrameMapper;
-    private final JdbcTemplate jdbcTemplate;
 
     @Autowired
-    public PlanServiceImpl(PlanMapper planMapper, PlanBarrierMapper planBarrierMapper, PlanFrameMapper planFrameMapper, JdbcTemplate jdbcTemplate) {
+    public PlanServiceImpl(PlanMapper planMapper, PlanBarrierMapper planBarrierMapper, PlanFrameMapper planFrameMapper) {
         this.planMapper = planMapper;
         this.planBarrierMapper = planBarrierMapper;
         this.planFrameMapper = planFrameMapper;
-        this.jdbcTemplate = jdbcTemplate;
-    }
-
-    @PostConstruct
-    public void initDatabase() {
-        try {
-            // Check if created_at column exists
-            Integer count = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'plan' AND COLUMN_NAME = 'created_at'",
-                Integer.class
-            );
-            if (count == null || count == 0) {
-                // Add columns
-                jdbcTemplate.execute(
-                    "ALTER TABLE plan ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
-                    "ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
-                );
-                System.out.println("Database columns added successfully");
-            }
-        } catch (Exception e) {
-            System.err.println("Database migration failed: " + e.getMessage());
-        }
     }
 
     /**

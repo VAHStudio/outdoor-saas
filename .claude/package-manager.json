@@ -1,4 +1,36 @@
 {
-  "packageManager": "bun",
-  "setAt": "2026-01-23T02:09:58.819Z"
+  "packageManager": "npm",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "setup": "bash scripts/setup.sh",
+    "validate": "bash scripts/validate.sh",
+    "test": "bash scripts/test.sh",
+    "claude:setup": "bash scripts/setup.sh",
+    "claude:validate": "bash scripts/validate.sh",
+    "claude:test": "bash scripts/test.sh"
+  },
+  "claudePlugin": {
+    "name": "everything-claude-code",
+    "version": "1.0.0",
+    "enabled": true,
+    "autoLoad": true,
+    "contexts": ["dev", "research", "review"],
+    "commands": {
+      "prefix": "/",
+      "directory": "./commands"
+    },
+    "agents": {
+      "directory": "./agents"
+    },
+    "skills": {
+      "directory": "./skills"
+    },
+    "rules": {
+      "directory": "./rules"
+    }
+  },
+  "setAt": "2026-03-12T13:07:00.000Z"
 }
