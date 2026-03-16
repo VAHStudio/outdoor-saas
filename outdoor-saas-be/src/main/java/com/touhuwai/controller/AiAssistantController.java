@@ -360,8 +360,17 @@ public class AiAssistantController {
             return Result.error("会话不存在或无权限");
         }
 
-        List<AiConversationMessage> messages = conversationService
-            .getConversationMessages(conversationId, page);
+        // 根据模式获取消息
+        List<AiConversationMessage> messages;
+        if ("DIFY".equals(conv.getMode())) {
+            // DIFY 模式：从 Dify API 获取（带缓存）
+            log.info("获取 DIFY 模式消息: conversationId={}, page={}", conversationId, page);
+            messages = conversationService.getDifyConversationMessages(conv, currentUserId, page);
+        } else {
+            // CUSTOM 模式：从本地数据库获取
+            log.info("获取 CUSTOM 模式消息: conversationId={}, page={}", conversationId, page);
+            messages = conversationService.getConversationMessages(conversationId, page);
+        }
         return Result.success(messages);
     }
 

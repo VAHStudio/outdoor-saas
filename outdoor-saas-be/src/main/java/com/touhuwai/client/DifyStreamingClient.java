@@ -3,15 +3,20 @@ package com.touhuwai.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.touhuwai.config.DifyConfig;
 import com.touhuwai.dto.dify.DifyChatRequest;
+import com.touhuwai.dto.dify.DifyMessage;
+import com.touhuwai.dto.dify.DifyMessagesResponse;
 import com.touhuwai.dto.dify.DifyStreamEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -145,9 +150,7 @@ public class DifyStreamingClient {
         }
         String user = (String) inputs.get("userId");
         
-        String conversationId = inputs != null 
-            ? (String) inputs.get("conversationId") 
-            : null;
+        String conversationId = (String) inputs.get("conversationId");
         
         String apiUrl = difyConfig.getBaseUrl() + "/chat-messages";
         log.info("Sending sync request to Dify: URL={}, query={}", apiUrl, query);
@@ -257,6 +260,56 @@ public class DifyStreamingClient {
         } catch (Exception e) {
             log.warn("Failed to parse event: {}", line, e);
             return null;
+        }
+    }
+    /**
+     * 获取 Dify 会话消息历史
+     * 
+     * @param conversationId 会话ID
+     * @param userId 用户ID
+     * @param limit 返回条数
+     * @param offset 偏移量
+     * @return Dify 消息列表
+     */
+    public List<DifyMessage> getConversationMessages(
+            String conversationId, 
+            String userId, 
+            int limit, 
+            int offset) {
+        
+        String baseUrl = difyConfig.getBaseUrl();
+        // 构建完整 URL（包含查询参数）
+        String fullUrl = String.format("%s/messages?conversation_id=%s&user=%s&limit=%d&offset=%d",
+            baseUrl, conversationId, userId, limit, offset);
+        
+        log.info("获取 Dify 消息历史: url={}", fullUrl);
+        
+        try {
+            DifyMessagesResponse response = webClient.get()
+                .uri(fullUrl)
+                .header("Authorization", "Bearer " + difyConfig.getApiKey())
+                .retrieve()
+                .onStatus(
+                    HttpStatusCode::isError,
+                    clientResponse -> clientResponse.bodyToMono(String.class)
+                        .flatMap(errorBody -> {
+                            log.error("Dify API 错误: {} - {}", clientResponse.statusCode(), errorBody);
+                            return Mono.error(new RuntimeException(
+                                "Dify API error: " + clientResponse.statusCode() + " - " + errorBody));
+                        })
+                )
+                .bodyToMono(DifyMessagesResponse.class)
+                .block();
+            
+            if (response != null && response.getData() != null) {
+                log.info("成功获取 {} 条 Dify 消息", response.getData().size());
+                return response.getData();
+            }
+            
+            return new ArrayList<>();
+        } catch (Exception e) {
+            log.error("获取 Dify 消息历史失败", e);
+            throw new RuntimeException("获取消息历史失败: " + e.getMessage(), e);
         }
     }
 }

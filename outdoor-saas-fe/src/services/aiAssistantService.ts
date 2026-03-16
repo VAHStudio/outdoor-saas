@@ -277,35 +277,6 @@ export async function deleteConversation(conversationId: string, userId?: string
   }
 }
 
-/**
- * 获取Custom Agent会话历史
- * 
- * @param sessionId 会话ID
- * @param mode AI模式（默认为CUSTOM）
- * @returns 会话历史消息列表
- */
-export async function getSessionHistory(
-  sessionId: string, 
-  mode: AiMode = 'CUSTOM'
-): Promise<{ sessionId: string; mode: string; messages: any[] }> {
-  const params = new URLSearchParams();
-  params.append('mode', mode);
-  
-  const url = `${API_BASE_URL}/ai-assistant/history/${sessionId}?${params.toString()}`;
-  const response = await fetch(url, {
-    headers: {
-      'Authorization': `Bearer ${getToken() || ''}`,
-    },
-  });
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch session history: ${response.status}`);
-  }
-  
-  const result = await response.json();
-  return result.data;
-}
-
 export default {
   createEventSource,
   getConversationId,
@@ -320,7 +291,6 @@ export default {
   deleteConversation,
   getConversationMessages,
   updateConversationTitle,
-  getSessionHistory,
   getDefaultAiMode,
   setDefaultAiMode,
 };

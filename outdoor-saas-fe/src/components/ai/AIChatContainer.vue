@@ -1,170 +1,105 @@
 <template>
-  <div :class="['h-full flex', className]">
-    <!-- 左侧历史会话侧边栏 -->
-    <div 
-      :class="[
-        'transition-all duration-300 border-r border-border-light dark:border-border-dark bg-surface-light dark:bg-surface-dark',
-        showSidebar ? 'w-80' : 'w-0 overflow-hidden'
-      ]"
+  <div :class="['h-full flex flex-col bg-background-light dark:bg-background-dark', className]">
+    <!-- Header - 简化版，只有模式切换和关闭 -->
+    <AIChatHeader
+      v-if="showHeader"
+      :title="title"
+      :subtitle="subtitle"
+      :current-mode="streamingState.currentMode.value"
+      :disabled="streamingState.isStreaming.value"
+      @clear="handleClear"
+      @change-mode="handleModeChange"
+    />
+
+    <!-- 模式切换提示 -->
+    <div
+      v-if="showModeChangeTip"
+      class="px-6 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-border-light dark:border-border-dark"
     >
-      <ConversationHistoryList
-        v-if="showSidebar"
-        :mode="streamingState.currentMode.value"
-        :conversations="historyState.conversations.value"
-        :current-conversation="historyState.currentConversation.value"
-        :is-loading="historyState.isLoading.value"
-        :is-loading-more="historyState.isLoadingMore.value"
-        :has-more="historyState.hasMoreConversations.value"
-        @select="handleSelectConversation"
-        @create="handleCreateConversation"
-        @load-more="historyState.loadMoreConversations"
-      />
-    </div>
-
-    <!-- 主聊天区域 -->
-    <div class="flex-1 flex flex-col bg-background-light dark:bg-background-dark min-w-0">
-      <!-- Header -->
-      <AIChatHeader
-        v-if="showHeader"
-        :title="title"
-        :subtitle="subtitle"
-        :current-mode="streamingState.currentMode.value"
-        :disabled="streamingState.isStreaming.value"
-        @clear="streamingState.clearMessages"
-        @change-mode="handleModeChange"
-      >
-        <template #actions>
-          <!-- 历史会话切换按钮 -->
-          <button
-            @click="showSidebar = !showSidebar"
-            :class="[
-              'p-2 rounded-lg transition-colors',
-              showSidebar 
-                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600' 
-                : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-text-light dark:text-text-dark'
-            ]"
-            :title="showSidebar ? '隐藏历史' : '显示历史'"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 3v18h18"/>
-              <path d="M15 9l-5 5-5-5"/>
-            </svg>
-          </button>
-        </template>
-      </AIChatHeader>
-
-      <!-- 模式切换提示 -->
-      <div
-        v-if="showModeChangeTip"
-        class="px-6 py-2 bg-blue-50 dark:bg-blue-900/20 border-b border-border-light dark:border-border-dark"
-      >
-        <p class="text-sm text-blue-600 dark:text-blue-400 text-center">
-          已切换到 {{ streamingState.currentMode.value === 'DIFY' ? 'Dify' : '智能体' }} 模式
-          <button
-            @click="showModeChangeTip = false"
-            class="ml-2 text-blue-400 hover:text-blue-600"
-          >
-            ×
-          </button>
-        </p>
-      </div>
-
-      <!-- 当前会话信息 -->
-      <div 
-        v-if="historyState.currentConversation.value"
-        class="px-4 py-2 bg-gray-50 dark:bg-gray-800/50 border-b border-border-light dark:border-border-dark flex items-center justify-between"
-      >
-        <div class="flex items-center gap-2 min-w-0">
-          <span class="text-sm font-medium text-text-light dark:text-text-dark truncate">
-            {{ historyState.currentConversation.value.title || '新对话' }}
-          </span>
-          <span class="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600">
-            {{ historyState.currentConversation.value.mode === 'DIFY' ? 'Dify' : '智能体' }}
-          </span>
-        </div>
-        <div class="flex items-center gap-1">
-          <button
-            @click="startRenameConversation"
-            class="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-700 rounded text-gray-500"
-            title="重命名"
-          >
-            ✏️
-          </button>
-          <button
-            @click="confirmDeleteConversation"
-            class="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-500"
-            title="删除"
-          >
-            🗑️
-          </button>
-        </div>
-      </div>
-
-      <!-- Quick Commands -->
-      <AIQuickCommands
-        v-if="!hasMessages && !historyState.currentConversation.value"
-        :commands="quickCommands"
-        @select="handleQuickCommand"
-        :disabled="streamingState.isStreaming.value"
-      />
-
-      <!-- Message List -->
-      <div 
-        ref="messageContainerRef"
-        class="flex-1 overflow-y-auto px-6 py-6"
-        @scroll="handleMessageScroll"
-      >
-        <!-- 加载更多历史消息 -->
-        <div v-if="historyState.isLoadingMore.value" class="text-center py-4">
-          <div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
-          <span class="ml-2 text-sm text-gray-500">加载历史消息...</span>
-        </div>
-        
-        <div v-if="!historyState.hasMoreMessages.value && messages.length > 0" 
-             class="text-center py-4 text-gray-400 text-sm">
-          ── 以上是历史消息 ──
-        </div>
-
-        <AIChatMessageList
-          :messages="messages"
-          :current-tool="streamingState.currentTool.value"
-          @action="handleAction"
+      <p class="text-sm text-blue-600 dark:text-blue-400 text-center">
+        已切换到 {{ streamingState.currentMode.value === 'DIFY' ? 'Dify' : '智能体' }} 模式
+        <button
+          @click="showModeChangeTip = false"
+          class="ml-2 text-blue-400 hover:text-blue-600"
         >
-          <template #empty>
-            <div class="flex flex-col items-center justify-center h-full text-center">
-              <div class="w-20 h-20 mb-6 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-full flex items-center justify-center">
-                <span class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-purple-600">智</span>
-              </div>
-              <h2 class="text-xl font-medium text-text-light dark:text-text-dark mb-3">
-                你好，我是投小智
-              </h2>
-              <p class="text-sm text-subtext-light dark:text-subtext-dark max-w-md">
-                您的专属AI员工，可以帮您查询和管理社区、道闸、框架、方案等信息。
-                <br />
-                点击上方快捷指令或输入您想了解的内容。
-              </p>
-            </div>
-          </template>
-        </AIChatMessageList>
-        <div ref="messagesEndRef" />
+          ×
+        </button>
+      </p>
+    </div>
+
+    <!-- 加载状态提示 -->
+    <div
+      v-if="singleConvState.isLoading.value && !singleConvState.messages.value.length"
+      class="flex items-center justify-center py-4 text-gray-500"
+    >
+      <div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500 mr-2"></div>
+      <span>加载历史记录...</span>
+    </div>
+
+    <!-- Quick Commands - 仅在首次使用且无消息时显示 -->
+    <AIQuickCommands
+      v-if="!hasMessages && !singleConvState.isLoading.value"
+      :commands="quickCommands"
+      @select="handleQuickCommand"
+      :disabled="streamingState.isStreaming.value"
+    />
+
+    <!-- Message List - 支持向上滚动加载更多历史 -->
+    <div 
+      ref="messageContainerRef"
+      class="flex-1 overflow-y-auto px-6 py-6"
+      @scroll="handleMessageScroll"
+    >
+      <!-- 加载更多历史消息 -->
+      <div v-if="singleConvState.isLoadingMore.value" class="text-center py-4">
+        <div class="inline-block animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500"></div>
+        <span class="ml-2 text-sm text-gray-500">加载历史消息...</span>
+      </div>
+      
+      <div v-if="!singleConvState.hasMoreMessages.value && singleConvState.messages.value.length > 0" 
+           class="text-center py-4 text-gray-400 text-sm">
+        ── 以上是历史消息 ──
       </div>
 
-      <!-- Suggested Topics -->
-      <SuggestedTopics
-        v-if="lastMessage && !streamingState.isStreaming.value"
-        :suggestions="suggestedTopics"
-        @select="handleSuggestion"
-      />
-
-      <!-- Input -->
-      <AIChatInput
-        v-model="input"
-        @send="handleSend"
-        @stop="streamingState.stopStreaming"
-        :is-streaming="streamingState.isStreaming.value"
-        :placeholder="placeholder"
-      />
+      <AIChatMessageList
+        :messages="messages"
+        :current-tool="streamingState.currentTool.value"
+        @action="handleAction"
+      >
+        <template #empty>
+          <div class="flex flex-col items-center justify-center h-full text-center">
+            <div class="w-20 h-20 mb-6 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-full flex items-center justify-center">
+              <span class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-purple-600">智</span>
+            </div>
+            <h2 class="text-xl font-medium text-text-light dark:text-text-dark mb-3">
+              你好，我是投小智
+            </h2>
+            <p class="text-sm text-subtext-light dark:text-subtext-dark max-w-md">
+              您的专属AI员工，可以帮您查询和管理社区、道闸、框架、方案等信息。
+              <br />
+              点击上方快捷指令或输入您想了解的内容。
+            </p>
+          </div>
+        </template>
+      </AIChatMessageList>
+      <div ref="messagesEndRef" />
     </div>
+
+    <!-- Suggested Topics -->
+    <SuggestedTopics
+      v-if="lastMessage && !streamingState.isStreaming.value"
+      :suggestions="suggestedTopics"
+      @select="handleSuggestion"
+    />
+
+    <!-- Input -->
+    <AIChatInput
+      v-model="input"
+      @send="handleSend"
+      @stop="streamingState.stopStreaming"
+      :is-streaming="streamingState.isStreaming.value"
+      :placeholder="placeholder"
+    />
   </div>
 </template>
 
@@ -172,16 +107,15 @@
 import { ref, computed, watch, nextTick, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAiStreaming } from '@/src/hooks/useAiStreaming';
-import { useConversationHistory } from '@/src/composables/useConversationHistory';
+import { useSingleConversation } from '@/src/composables/useSingleConversation';
 import type { NavigationAction, QuickCommand } from '@/src/components/ai/types';
 import type { ActionButton, ChatMessage } from '@/src/hooks/useAiStreaming.types';
-import type { AiMode, Conversation } from '@/src/types/aiAssistant';
+import type { AiMode, ConversationMessage } from '@/src/types/aiAssistant';
 import AIChatHeader from './AIChatHeader.vue';
 import AIChatMessageList from './AIChatMessageList.vue';
 import AIChatInput from './AIChatInput.vue';
 import AIQuickCommands from './AIQuickCommands.vue';
 import SuggestedTopics from './SuggestedTopics.vue';
-import ConversationHistoryList from './ConversationHistoryList.vue';
 
 const showToast = (type: string, message: string, duration: number = 3000) => {
   const toast = document.createElement('div');
@@ -231,13 +165,12 @@ const router = useRouter();
 const input = ref('');
 const messagesEndRef = ref<HTMLDivElement>();
 const messageContainerRef = ref<HTMLDivElement>();
-const showSidebar = ref(true);
 const showModeChangeTip = ref(false);
 
-// 当前AI模式（用于historyState和streamingState共享）
+// 当前AI模式
 const currentMode = ref<AiMode>('DIFY');
 
-// AI Streaming hook（必须先定义）
+// AI Streaming hook
 const streamingState = useAiStreaming({
   onNavigation: handleNavigation,
   onError: (error: string) => showToast('error', error),
@@ -248,13 +181,13 @@ watch(() => streamingState.currentMode.value, (newMode) => {
   currentMode.value = newMode;
 }, { immediate: true });
 
-// 历史会话管理（使用 currentMode）
-const historyState = useConversationHistory(currentMode);
+// 单会话管理（简化版）
+const singleConvState = useSingleConversation(currentMode);
 
 // 组合消息：历史消息 + 当前流消息
 const messages = computed((): ChatMessage[] => {
   // 转换历史消息格式
-  const historyMsgs: ChatMessage[] = historyState.messages.value.map(msg => ({
+  const historyMsgs: ChatMessage[] = singleConvState.messages.value.map((msg: ConversationMessage) => ({
     id: String(msg.id),
     role: msg.role,
     content: msg.content,
@@ -312,9 +245,10 @@ const suggestedTopics = computed(() => {
   return topics.slice(0, 4);
 });
 
-// Navigation handler
+// 有效的内部路由列表
 const validRoutes = ['/', '/plans', '/plan', '/communities', '/community', '/frames', '/frame', '/barrier-gates', '/barrier-gate', '/plan-communities', '/plan-frames', '/plan-barriers', '/ai-assistant'];
 
+// Navigation handler
 function handleNavigation(nav: NavigationAction) {
   if (nav.message) showToast('info', nav.message);
   
@@ -357,67 +291,22 @@ const handleModeChange = async (mode: AiMode) => {
   
   // 清空当前消息
   streamingState.clearMessages();
+  
+  // 单会话 Hook 会自动处理模式切换
 };
 
-// 选择历史会话
-const handleSelectConversation = async (conversation: Conversation) => {
-  if (streamingState.isStreaming.value) {
-    showToast('warning', '对话进行中，请稍后再切换');
-    return;
-  }
-  
-  await historyState.switchConversation(conversation);
-  
-  // 如果模式不匹配，自动切换
-  if (streamingState.currentMode.value !== conversation.mode) {
-    streamingState.setMode(conversation.mode);
-  }
-};
-
-// 创建新会话
-const handleCreateConversation = async () => {
-  if (streamingState.isStreaming.value) {
-    showToast('warning', '对话进行中，请稍后再创建');
-    return;
-  }
-  
-  try {
-    await historyState.createNewConversation();
-    streamingState.clearMessages();
-    showToast('success', '新会话已创建');
-  } catch (error) {
-    showToast('error', '创建会话失败');
-  }
-};
-
-// 重命名会话
-const startRenameConversation = () => {
-  const conv = historyState.currentConversation.value;
-  if (!conv) return;
-  
-  const newTitle = prompt('请输入新标题:', conv.title || '新对话');
-  if (newTitle && newTitle.trim()) {
-    historyState.updateTitle(conv.conversationId, newTitle.trim());
-  }
-};
-
-// 删除会话确认
-const confirmDeleteConversation = () => {
-  const conv = historyState.currentConversation.value;
-  if (!conv) return;
-  
-  if (confirm('确定要删除这个会话吗？此操作不可恢复。')) {
-    historyState.deleteConversation(conv.conversationId);
-    streamingState.clearMessages();
-  }
+// 清空消息
+const handleClear = () => {
+  streamingState.clearMessages();
+  singleConvState.clearMessages();
 };
 
 // 消息区域滚动加载更多
 const handleMessageScroll = () => {
   if (!messageContainerRef.value) return;
   const { scrollTop } = messageContainerRef.value;
-  if (scrollTop < 50 && !historyState.isLoadingMore.value) {
-    historyState.loadMoreMessages();
+  if (scrollTop < 50 && !singleConvState.isLoadingMore.value) {
+    singleConvState.loadMoreMessages();
   }
 };
 
@@ -425,12 +314,14 @@ const handleMessageScroll = () => {
 const handleSend = () => {
   if (!input.value.trim() || streamingState.isStreaming.value) return;
   
-  if (!historyState.currentConversation.value) {
-    showToast('error', '请先选择或创建一个会话');
-    return;
+  const conversationId = singleConvState.getCurrentConversationId();
+  
+  if (!conversationId) {
+    // 没有会话ID时，让后端自动创建会话
+    console.log('[Send] 没有现有会话，后端将自动创建');
   }
   
-  streamingState.sendMessage(input.value, historyState.currentConversation.value.conversationId);
+  streamingState.sendMessage(input.value, conversationId || undefined);
   input.value = '';
 };
 
@@ -469,17 +360,12 @@ watch(messages, () => {
   });
 }, { deep: true });
 
-// 初始化
+// 初始化 - 自动获取单会话
 onMounted(async () => {
-  // 加载当前模式的会话列表
-  await historyState.loadConversations(true);
-  
-  // 如果有会话，自动切换到最新的
-  if (historyState.conversations.value.length > 0) {
-    await historyState.switchConversation(historyState.conversations.value[0]);
-  } else {
-    // 没有会话则创建新会话
-    await historyState.createNewConversation();
+  console.log('[AIChatContainer] 初始化单会话模式');
+  await singleConvState.ensureSingleConversation();
+  if (singleConvState.currentConversation.value) {
+    await singleConvState.loadMessages(true);
   }
 });
 </script>

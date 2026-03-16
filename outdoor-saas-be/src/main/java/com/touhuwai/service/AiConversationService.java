@@ -1,6 +1,9 @@
 package com.touhuwai.service;
 
 import com.touhuwai.entity.AiConversation;
+import com.touhuwai.dto.converter.DifyMessageConverter;
+import com.touhuwai.client.DifyStreamingClient;
+import com.touhuwai.dto.dify.DifyMessage;
 import com.touhuwai.entity.AiConversationMessage;
 import com.touhuwai.mapper.AiConversationMapper;
 import com.touhuwai.mapper.AiConversationMessageMapper;
@@ -25,6 +28,7 @@ public class AiConversationService {
     private final AiConversationMapper conversationMapper;
     private final AiConversationMessageMapper messageMapper;
     private final AiConversationCacheService cacheService;
+    private final DifyStreamingClient difyClient;
 
     private static final int PAGE_SIZE = 10;
     
@@ -100,6 +104,7 @@ public class AiConversationService {
             conversation.setConversationId(conversationId);
             conversation.setTitle("新对话");
             conversation.setStatus(1);
+            conversation.setMode("DIFY");
             conversation.setLastMessageAt(LocalDateTime.now());
             
             conversationMapper.insert(conversation);
@@ -304,6 +309,59 @@ public class AiConversationService {
     /**
      * 生成唯一的会话ID
      */
+
+    /**
+     * 获取 Dify 模式的消息历史
+     * 优先从缓存获取，缓存未命中则调用 Dify API
+     *
+     * @param conversation 会话信息
+     * @param userId 用户ID
+     * @param page 页码
+     * @return 消息列表
+     */
+    public List<AiConversationMessage> getDifyConversationMessages(
+            AiConversation conversation,
+            String userId,
+            int page) {
+        
+        int offset = page * PAGE_SIZE;
+        String conversationId = conversation.getConversationId();
+        
+        // 1. 尝试从缓存获取
+        List<DifyMessage> cachedMessages = cacheService
+            .getCachedDifyMessages(conversationId, offset, PAGE_SIZE);
+        
+        if (cachedMessages != null && !cachedMessages.isEmpty()) {
+            log.debug("Dify 消息缓存命中: conversationId={}", conversationId);
+            return DifyMessageConverter.convertList(cachedMessages);
+        }
+        
+        // 2. 缓存未命中，调用 Dify API
+        log.info("从 Dify API 获取消息: conversationId={}, offset={}, limit={}", 
+            conversationId, offset, PAGE_SIZE);
+        
+        try {
+            List<DifyMessage> difyMessages = difyClient.getConversationMessages(
+                conversationId,
+                userId,
+                PAGE_SIZE,
+                offset
+            );
+            
+            // 3. 存入缓存
+            if (difyMessages != null && !difyMessages.isEmpty()) {
+                cacheService.cacheDifyMessages(conversationId, difyMessages);
+                log.info("成功从 Dify API 获取 {} 条消息", difyMessages.size());
+            }
+            
+            // 4. 转换为本地格式
+            return DifyMessageConverter.convertList(difyMessages);
+        } catch (Exception e) {
+            log.error("获取 Dify 消息失败", e);
+            // 出错时返回空列表，避免前端报错
+            return List.of();
+        }
+    }
     private String generateConversationId() {
         return UUID.randomUUID().toString().replace("-", "");
     }

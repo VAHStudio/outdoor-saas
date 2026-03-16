@@ -3,6 +3,7 @@ package com.touhuwai.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.touhuwai.entity.AiConversation;
+import com.touhuwai.dto.dify.DifyMessage;
 import com.touhuwai.entity.AiConversationMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -238,5 +239,79 @@ public class AiConversationCacheService {
         clearMessageCache(conversationId);
         log.info("Cleared all cache for user {} mode {} conversation {}",
             userId, mode, conversationId);
+    }
+
+    // ==================== Dify 消息缓存 ====================
+
+    /**
+     * 构建 Dify 消息缓存键
+     */
+    private String buildDifyMsgKey(String conversationId) {
+        return "ai:dify:msg:" + conversationId;
+    }
+
+    /**
+     * 缓存 Dify 消息列表（List，LPUSH新消息）
+     */
+    public void cacheDifyMessages(String conversationId, List<DifyMessage> messages) {
+        String key = buildDifyMsgKey(conversationId);
+        try {
+            // 先删除旧缓存
+            redisTemplate.delete(key);
+            
+            // 添加新数据（LPUSH，新消息在前）
+            for (DifyMessage msg : messages) {
+                String value = objectMapper.writeValueAsString(msg);
+                redisTemplate.opsForList().leftPush(key, value);
+            }
+            
+            redisTemplate.expire(key, MSG_LIST_TTL, TimeUnit.SECONDS);
+            log.debug("Cached {} Dify messages for conversation {}", messages.size(), conversationId);
+        } catch (Exception e) {
+            log.error("Failed to cache Dify messages", e);
+        }
+    }
+
+    /**
+     * 从缓存获取 Dify 消息列表（分页）
+     */
+    public List<DifyMessage> getCachedDifyMessages(String conversationId, int offset, int limit) {
+        String key = buildDifyMsgKey(conversationId);
+        try {
+            List<String> values = redisTemplate.opsForList()
+                .range(key, offset, offset + limit - 1);
+            
+            if (values == null || values.isEmpty()) {
+                return null;
+            }
+            
+            return values.stream()
+                .map(v -> {
+                    try {
+                        return objectMapper.readValue(v, DifyMessage.class);
+                    } catch (Exception e) {
+                        log.error("Failed to parse Dify message from cache", e);
+                        return null;
+                    }
+                })
+                .filter(msg -> msg != null)
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("Failed to get cached Dify messages", e);
+            return null;
+        }
+    }
+
+    /**
+     * 清除 Dify 消息缓存
+     */
+    public void clearDifyMessageCache(String conversationId) {
+        String key = buildDifyMsgKey(conversationId);
+        try {
+            redisTemplate.delete(key);
+            log.debug("Cleared Dify message cache for conversation {}", conversationId);
+        } catch (Exception e) {
+            log.error("Failed to clear Dify message cache", e);
+        }
     }
 }
