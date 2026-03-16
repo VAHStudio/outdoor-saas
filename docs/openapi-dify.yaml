@@ -22,7 +22,7 @@ info:
     3. API Key 值填写管理员提供的密钥
 
 servers:
-  - url: http://121.40.166.153:16000
+  - url: http://192.168.31.34:16000
     description: 本地开发环境（frp内网穿透）
 
 paths:
@@ -133,7 +133,7 @@ paths:
       tags:
         - 社区管理
       summary: 分页查询社区
-      description: 根据条件分页查询社区列表
+      description: 根据条件分页查询社区列表，支持多种查询条件组合
       operationId: filter_communities
       requestBody:
         required: true
@@ -255,6 +255,27 @@ paths:
         '200':
           description: 成功
 
+  /api/barrier-gate/filter/page:
+    post:
+      tags:
+        - 道闸管理
+      summary: 分页查询道闸
+      description: 根据条件分页查询道闸列表，支持多种查询条件组合
+      operationId: filter_barrier_gates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BarrierGateQueryParam'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPageResultBarrierGate'
+
   # ========== 框架管理 ==========
   /api/frame/list:
     get:
@@ -339,6 +360,27 @@ paths:
         '200':
           description: 更新成功
 
+  /api/frame/filter/page:
+    post:
+      tags:
+        - 框架管理
+      summary: 分页查询框架
+      description: 根据条件分页查询框架列表，支持多种查询条件组合
+      operationId: filter_frames
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FrameQueryParam'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPageResultFrame'
+
   # ========== 方案管理 ==========
   /api/plan/list:
     get:
@@ -419,14 +461,35 @@ paths:
         '200':
           description: 更新成功
 
+  /api/plan/filter/page:
+    post:
+      tags:
+        - 方案管理
+      summary: 分页查询方案
+      description: 根据条件分页查询方案列表，支持多种查询条件组合
+      operationId: filter_plans
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanQueryParam'
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPageResultPlan'
+
   # ========== 方案关联管理 ==========
   /api/plan-community/filter/page:
     post:
       tags:
         - 方案关联管理
-      summary: 查询方案社区关联
-      description: 分页查询方案与社区的关联关系
-      operationId: list_plan_communities
+      summary: 分页查询方案社区关联
+      description: 分页查询方案与社区的关联关系，支持多种查询条件组合
+      operationId: filter_plan_communities
       requestBody:
         required: true
         content:
@@ -436,6 +499,10 @@ paths:
       responses:
         '200':
           description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPageResultPlanCommunity'
 
   /api/plan-community:
     post:
@@ -476,9 +543,9 @@ paths:
     post:
       tags:
         - 方案关联管理
-      summary: 查询方案道闸关联
-      description: 分页查询方案与道闸的关联关系
-      operationId: list_plan_barriers
+      summary: 分页查询方案道闸关联
+      description: 分页查询方案与道闸的关联关系，支持多种查询条件组合
+      operationId: filter_plan_barriers
       requestBody:
         required: true
         content:
@@ -488,6 +555,10 @@ paths:
       responses:
         '200':
           description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPageResultPlanBarrier'
 
   /api/plan-barrier:
     post:
@@ -528,9 +599,9 @@ paths:
     post:
       tags:
         - 方案关联管理
-      summary: 查询方案框架关联
-      description: 分页查询方案与框架的关联关系
-      operationId: list_plan_frames
+      summary: 分页查询方案框架关联
+      description: 分页查询方案与框架的关联关系，支持多种查询条件组合
+      operationId: filter_plan_frames
       requestBody:
         required: true
         content:
@@ -540,6 +611,10 @@ paths:
       responses:
         '200':
           description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultPageResultPlanFrame'
 
   /api/plan-frame:
     post:
@@ -596,13 +671,100 @@ components:
       properties:
         code:
           type: integer
+          description: 响应码，200表示成功
         message:
           type: string
+          description: 响应消息
         data:
           type: integer
+          description: 返回的整数数据（通常为ID或影响行数）
         timestamp:
           type: integer
           format: int64
+          description: 时间戳
+
+    ResultString:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码，200表示成功
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: string
+          description: 返回的字符串数据
+        timestamp:
+          type: integer
+          format: int64
+          description: 时间戳
+
+    # ========== 分页参数基类 ==========
+    PageRequest:
+      type: object
+      description: 分页请求基类，所有分页查询参数都继承此类
+      properties:
+        pageNum:
+          type: integer
+          description: 当前页码，从1开始，默认为1
+          minimum: 1
+          default: 1
+        pageSize:
+          type: integer
+          description: 每页大小，默认为10，最大1000
+          minimum: 1
+          maximum: 1000
+          default: 10
+        orderBy:
+          type: string
+          description: 排序字段名称
+        order:
+          type: string
+          description: 排序方式，asc为升序，desc为降序，默认为desc
+          enum: [asc, desc]
+          default: desc
+
+    # ========== 基础查询参数 ==========
+    BaseQueryParam:
+      type: object
+      description: 查询参数基类，包含分页、时间范围、关键词搜索等通用参数
+      allOf:
+        - $ref: '#/components/schemas/PageRequest'
+      properties:
+        keyword:
+          type: string
+          description: 关键词搜索，用于名称、编号等字段的模糊搜索
+        startTime:
+          type: string
+          format: date-time
+          description: 开始时间，用于时间范围查询
+        endTime:
+          type: string
+          format: date-time
+          description: 结束时间，用于时间范围查询
+        createdAtBegin:
+          type: string
+          format: date-time
+          description: 创建时间开始，用于查询创建时间在此时间之后的数据
+        createdAtEnd:
+          type: string
+          format: date-time
+          description: 创建时间结束，用于查询创建时间在此时间之前的数据
+        updatedAtBegin:
+          type: string
+          format: date-time
+          description: 更新时间开始，用于查询更新时间在此时间之后的数据
+        updatedAtEnd:
+          type: string
+          format: date-time
+          description: 更新时间结束，用于查询更新时间在此时间之前的数据
+        statusList:
+          type: string
+          description: 状态列表，用于IN查询，多个状态用逗号分隔，如"1,2,3"
+        idList:
+          type: string
+          description: ID列表，用于IN查询，多个ID用逗号分隔，如"1,2,3"
 
     # ========== 社区 ==========
     Community:
@@ -610,6 +772,7 @@ components:
       properties:
         id:
           type: integer
+          description: 社区ID
         communityNo:
           type: string
           description: 社区编号
@@ -634,44 +797,84 @@ components:
       properties:
         code:
           type: integer
+          description: 响应码，200表示成功
         message:
           type: string
+          description: 响应消息
         data:
           $ref: '#/components/schemas/Community'
         timestamp:
           type: integer
           format: int64
+          description: 时间戳
 
     ResultListCommunity:
       type: object
       properties:
         code:
           type: integer
+          description: 响应码，200表示成功
         message:
           type: string
+          description: 响应消息
         data:
           type: array
+          description: 社区列表
           items:
             $ref: '#/components/schemas/Community'
         timestamp:
           type: integer
           format: int64
+          description: 时间戳
 
     CommunityQueryParam:
       type: object
+      description: 社区信息分页查询参数，支持精确匹配、模糊搜索、范围查询、IN查询等多种查询方式
+      allOf:
+        - $ref: '#/components/schemas/BaseQueryParam'
       properties:
-        keyword:
+        communityNo:
           type: string
-          description: 关键词搜索
+          description: 社区编号（精确匹配）
+        communityNoLike:
+          type: string
+          description: 社区编号模糊搜索，支持部分匹配
+        buildingName:
+          type: string
+          description: 楼栋名称（精确匹配）
+        buildingNameLike:
+          type: string
+          description: 楼栋名称模糊搜索，支持部分匹配
+        buildingAddress:
+          type: string
+          description: 楼栋地址（精确匹配）
+        buildingAddressLike:
+          type: string
+          description: 楼栋地址模糊搜索，支持部分匹配
         city:
           type: string
-          description: 城市筛选
-        pageNum:
-          type: integer
-          default: 1
-        pageSize:
-          type: integer
-          default: 10
+          description: 城市（精确匹配）
+        cityList:
+          type: array
+          description: 城市列表（IN查询），可同时查询多个城市
+          items:
+            type: string
+        coordLatMin:
+          type: number
+          format: decimal
+          description: 纬度最小值，用于地理位置范围查询
+        coordLatMax:
+          type: number
+          format: decimal
+          description: 纬度最大值，用于地理位置范围查询
+        coordLngMin:
+          type: number
+          format: decimal
+          description: 经度最小值，用于地理位置范围查询
+        coordLngMax:
+          type: number
+          format: decimal
+          description: 经度最大值，用于地理位置范围查询
 
     # ========== 道闸 ==========
     BarrierGate:
@@ -679,6 +882,7 @@ components:
       properties:
         id:
           type: integer
+          description: 道闸ID
         gateNo:
           type: string
           description: 道闸编号
@@ -691,6 +895,12 @@ components:
         devicePosition:
           type: integer
           description: 设备位置
+        screenPosition:
+          type: integer
+          description: 屏幕位置
+        lightboxDirection:
+          type: integer
+          description: 灯箱方向
         communityId:
           type: integer
           description: 所属社区ID
@@ -700,28 +910,98 @@ components:
       properties:
         code:
           type: integer
+          description: 响应码，200表示成功
         message:
           type: string
+          description: 响应消息
         data:
           $ref: '#/components/schemas/BarrierGate'
         timestamp:
           type: integer
           format: int64
+          description: 时间戳
 
     ResultListBarrierGate:
       type: object
       properties:
         code:
           type: integer
+          description: 响应码，200表示成功
         message:
           type: string
+          description: 响应消息
         data:
           type: array
+          description: 道闸列表
           items:
             $ref: '#/components/schemas/BarrierGate'
         timestamp:
           type: integer
           format: int64
+          description: 时间戳
+
+    BarrierGateQueryParam:
+      type: object
+      description: 道闸设备分页查询参数，支持精确匹配、模糊搜索、IN查询等多种查询方式，支持关联社区表查询
+      allOf:
+        - $ref: '#/components/schemas/BaseQueryParam'
+      properties:
+        gateNo:
+          type: string
+          description: 道闸编号（精确匹配）
+        gateNoLike:
+          type: string
+          description: 道闸编号模糊搜索，支持部分匹配
+        communityId:
+          type: integer
+          description: 社区ID（精确匹配）
+        communityIdList:
+          type: array
+          description: 社区ID列表（IN查询），可同时查询多个社区
+          items:
+            type: integer
+        deviceNo:
+          type: string
+          description: 设备编号（精确匹配）
+        deviceNoLike:
+          type: string
+          description: 设备编号模糊搜索，支持部分匹配
+        doorLocation:
+          type: string
+          description: 门岗位置（精确匹配）
+        doorLocationLike:
+          type: string
+          description: 门岗位置模糊搜索，支持部分匹配
+        devicePosition:
+          type: integer
+          description: 设备位置（精确匹配）
+        devicePositionList:
+          type: array
+          description: 设备位置列表（IN查询），可同时查询多个设备位置
+          items:
+            type: integer
+        screenPosition:
+          type: integer
+          description: 屏幕位置（精确匹配）
+        screenPositionList:
+          type: array
+          description: 屏幕位置列表（IN查询），可同时查询多个屏幕位置
+          items:
+            type: integer
+        lightboxDirection:
+          type: integer
+          description: 灯箱方向（精确匹配）
+        lightboxDirectionList:
+          type: array
+          description: 灯箱方向列表（IN查询），可同时查询多个灯箱方向
+          items:
+            type: integer
+        city:
+          type: string
+          description: 城市（关联社区表查询），将根据城市筛选所属社区的道闸
+        buildingNameLike:
+          type: string
+          description: 楼栋名称模糊搜索（关联社区表），将根据楼栋名称模糊匹配所属社区的道闸
 
     # ========== 框架 ==========
     Frame:
@@ -729,6 +1009,7 @@ components:
       properties:
         id:
           type: integer
+          description: 框架ID
         frameNo:
           type: string
           description: 框架编号
@@ -741,6 +1022,9 @@ components:
         elevator:
           type: string
           description: 电梯
+        innerPosition:
+          type: integer
+          description: 内外位置
         communityId:
           type: integer
           description: 所属社区ID
@@ -750,15 +1034,72 @@ components:
       properties:
         code:
           type: integer
+          description: 响应码，200表示成功
         message:
           type: string
+          description: 响应消息
         data:
           type: array
+          description: 框架列表
           items:
             $ref: '#/components/schemas/Frame'
         timestamp:
           type: integer
           format: int64
+          description: 时间戳
+
+    FrameQueryParam:
+      type: object
+      description: 框架媒体分页查询参数，支持精确匹配、模糊搜索、IN查询等多种查询方式，支持关联社区表查询
+      allOf:
+        - $ref: '#/components/schemas/BaseQueryParam'
+      properties:
+        frameNo:
+          type: string
+          description: 框架编号（精确匹配）
+        frameNoLike:
+          type: string
+          description: 框架编号模糊搜索，支持部分匹配
+        communityId:
+          type: integer
+          description: 社区ID（精确匹配）
+        communityIdList:
+          type: array
+          description: 社区ID列表（IN查询），可同时查询多个社区
+          items:
+            type: integer
+        building:
+          type: string
+          description: 楼栋（精确匹配）
+        buildingLike:
+          type: string
+          description: 楼栋模糊搜索，支持部分匹配
+        unit:
+          type: string
+          description: 单元（精确匹配）
+        unitLike:
+          type: string
+          description: 单元模糊搜索，支持部分匹配
+        elevator:
+          type: string
+          description: 电梯（精确匹配）
+        elevatorLike:
+          type: string
+          description: 电梯模糊搜索，支持部分匹配
+        innerPosition:
+          type: integer
+          description: 内外位置（精确匹配）
+        innerPositionList:
+          type: array
+          description: 内外位置列表（IN查询），可同时查询多个位置
+          items:
+            type: integer
+        city:
+          type: string
+          description: 城市（关联社区表查询），将根据城市筛选所属社区的框架
+        buildingNameLike:
+          type: string
+          description: 楼栋名称模糊搜索（关联社区表），将根据楼栋名称模糊匹配所属社区的框架
 
     # ========== 方案 ==========
     Plan:
@@ -766,6 +1107,7 @@ components:
       properties:
         id:
           type: integer
+          description: 方案ID
         planNo:
           type: string
           description: 方案编号
@@ -775,144 +1117,669 @@ components:
         customer:
           type: string
           description: 客户名称
+        salesType:
+          type: integer
+          description: 销售类型
+        mediaType:
+          type: integer
+          description: 媒体类型
         releaseStatus:
           type: integer
           description: 发布状态
         releaseDateBegin:
           type: string
           format: date
+          description: 投放开始日期
         releaseDateEnd:
           type: string
           format: date
+          description: 投放结束日期
+        salesPerson:
+          type: string
+          description: 销售人员
+        budget:
+          type: integer
+          format: int64
+          description: 预算金额（单位：元）
+        estimatedReach:
+          type: integer
+          description: 预计触达人数
 
-    # ========== 分页 ==========
+    ResultPlan:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: 响应码，200表示成功
+        message:
+          type: string
+          description: 响应消息
+        data:
+          $ref: '#/components/schemas/Plan'
+        timestamp:
+          type: integer
+          format: int64
+          description: 时间戳
+
+    PlanQueryParam:
+      type: object
+      description: 投放方案分页查询参数，支持精确匹配、模糊搜索、IN查询、范围查询等多种查询方式
+      allOf:
+        - $ref: '#/components/schemas/BaseQueryParam'
+      properties:
+        planNo:
+          type: string
+          description: 方案编号（精确匹配）
+        planNoLike:
+          type: string
+          description: 方案编号模糊搜索，支持部分匹配
+        planName:
+          type: string
+          description: 方案名称（精确匹配）
+        planNameLike:
+          type: string
+          description: 方案名称模糊搜索，支持部分匹配
+        customer:
+          type: string
+          description: 客户名称（精确匹配）
+        customerLike:
+          type: string
+          description: 客户名称模糊搜索，支持部分匹配
+        releaseStatus:
+          type: integer
+          description: 投放状态（精确匹配），具体状态码含义请参考枚举定义
+        releaseStatusList:
+          type: array
+          description: 投放状态列表（IN查询），可同时查询多个投放状态
+          items:
+            type: integer
+        salesType:
+          type: integer
+          description: 销售类型（精确匹配），具体类型码含义请参考枚举定义
+        salesTypeList:
+          type: array
+          description: 销售类型列表（IN查询），可同时查询多个销售类型
+          items:
+            type: integer
+        mediaType:
+          type: integer
+          description: 媒体类型（精确匹配），具体类型码含义请参考枚举定义
+        mediaTypeList:
+          type: array
+          description: 媒体类型列表（IN查询），可同时查询多个媒体类型
+          items:
+            type: integer
+        releaseDateBeginFrom:
+          type: string
+          format: date
+          description: 投放开始日期范围起点（大于等于），用于筛选投放开始日期在此日期之后的数据
+        releaseDateBeginTo:
+          type: string
+          format: date
+          description: 投放开始日期范围终点（小于等于），用于筛选投放开始日期在此日期之前的数据
+        releaseDateEndFrom:
+          type: string
+          format: date
+          description: 投放结束日期范围起点（大于等于），用于筛选投放结束日期在此日期之后的数据
+        releaseDateEndTo:
+          type: string
+          format: date
+          description: 投放结束日期范围终点（小于等于），用于筛选投放结束日期在此日期之前的数据
+        salesPerson:
+          type: string
+          description: 销售人员（精确匹配）
+        salesPersonLike:
+          type: string
+          description: 销售人员模糊搜索，支持部分匹配
+        budgetMin:
+          type: integer
+          format: int64
+          description: 预算最小值（大于等于），用于筛选预算在此金额以上的方案
+        budgetMax:
+          type: integer
+          format: int64
+          description: 预算最大值（小于等于），用于筛选预算在此金额以下的方案
+        estimatedReachMin:
+          type: integer
+          description: 预计触达人数最小值（大于等于），用于筛选预计触达人数在此数值以上的方案
+        estimatedReachMax:
+          type: integer
+          description: 预计触达人数最大值（小于等于），用于筛选预计触达人数在此数值以下的方案
+
+    # ========== 分页响应 ==========
     PageResult:
       type: object
+      description: 分页结果基类
       properties:
         pageNum:
           type: integer
+          description: 当前页码
         pageSize:
           type: integer
+          description: 每页大小
         total:
           type: integer
           format: int64
+          description: 总记录数
         pages:
           type: integer
+          description: 总页数
         list:
           type: array
+          description: 当前页数据列表
           items:
             type: object
 
     ResultPageResultCommunity:
       type: object
+      description: 社区分页查询响应
       properties:
         code:
           type: integer
+          description: 响应码，200表示成功
         message:
           type: string
+          description: 响应消息
         data:
-          allOf:
-            - $ref: '#/components/schemas/PageResult'
-            - properties:
-                list:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Community'
+          type: object
+          description: 分页结果
+          properties:
+            pageNum:
+              type: integer
+              description: 当前页码
+            pageSize:
+              type: integer
+              description: 每页大小
+            total:
+              type: integer
+              format: int64
+              description: 总记录数
+            pages:
+              type: integer
+              description: 总页数
+            list:
+              type: array
+              description: 社区列表
+              items:
+                $ref: '#/components/schemas/Community'
         timestamp:
           type: integer
           format: int64
+          description: 时间戳
+
+    ResultPageResultBarrierGate:
+      type: object
+      description: 道闸分页查询响应
+      properties:
+        code:
+          type: integer
+          description: 响应码，200表示成功
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          description: 分页结果
+          properties:
+            pageNum:
+              type: integer
+              description: 当前页码
+            pageSize:
+              type: integer
+              description: 每页大小
+            total:
+              type: integer
+              format: int64
+              description: 总记录数
+            pages:
+              type: integer
+              description: 总页数
+            list:
+              type: array
+              description: 道闸列表
+              items:
+                $ref: '#/components/schemas/BarrierGate'
+        timestamp:
+          type: integer
+          format: int64
+          description: 时间戳
+
+    ResultPageResultFrame:
+      type: object
+      description: 框架分页查询响应
+      properties:
+        code:
+          type: integer
+          description: 响应码，200表示成功
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          description: 分页结果
+          properties:
+            pageNum:
+              type: integer
+              description: 当前页码
+            pageSize:
+              type: integer
+              description: 每页大小
+            total:
+              type: integer
+              format: int64
+              description: 总记录数
+            pages:
+              type: integer
+              description: 总页数
+            list:
+              type: array
+              description: 框架列表
+              items:
+                $ref: '#/components/schemas/Frame'
+        timestamp:
+          type: integer
+          format: int64
+          description: 时间戳
+
+    ResultPageResultPlan:
+      type: object
+      description: 方案分页查询响应
+      properties:
+        code:
+          type: integer
+          description: 响应码，200表示成功
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          description: 分页结果
+          properties:
+            pageNum:
+              type: integer
+              description: 当前页码
+            pageSize:
+              type: integer
+              description: 每页大小
+            total:
+              type: integer
+              format: int64
+              description: 总记录数
+            pages:
+              type: integer
+              description: 总页数
+            list:
+              type: array
+              description: 方案列表
+              items:
+                $ref: '#/components/schemas/Plan'
+        timestamp:
+          type: integer
+          format: int64
+          description: 时间戳
 
     # ========== 方案关联 ==========
     PlanCommunity:
       type: object
+      description: 方案社区关联实体
       properties:
         id:
           type: integer
+          description: 关联ID
         planId:
           type: integer
+          description: 方案ID
         communityId:
           type: integer
+          description: 社区ID
         releaseDateBegin:
           type: string
           format: date
+          description: 在该社区的投放开始日期
         releaseDateEnd:
           type: string
           format: date
+          description: 在该社区的投放结束日期
+        barrierRequiredQty:
+          type: integer
+          description: 该社区需要的道闸数量
+        frameRequiredQty:
+          type: integer
+          description: 该社区需要的框架数量
+        releaseStatus:
+          type: integer
+          description: 发布状态
 
     PlanCommunityQueryParam:
       type: object
+      description: 方案社区关联分页查询参数，支持精确匹配、IN查询、范围查询等多种查询方式
+      allOf:
+        - $ref: '#/components/schemas/BaseQueryParam'
       properties:
         planId:
           type: integer
+          description: 方案ID（精确匹配）
+        planIdList:
+          type: array
+          description: 方案ID列表（IN查询），可同时查询多个方案
+          items:
+            type: integer
         communityId:
           type: integer
-        pageNum:
+          description: 社区ID（精确匹配）
+        communityIdList:
+          type: array
+          description: 社区ID列表（IN查询），可同时查询多个社区
+          items:
+            type: integer
+        releaseStatus:
           type: integer
-          default: 1
-        pageSize:
+          description: 发布状态（精确匹配），具体状态码含义请参考枚举定义
+        releaseStatusList:
+          type: array
+          description: 发布状态列表（IN查询），可同时查询多个发布状态
+          items:
+            type: integer
+        barrierRequiredQty:
           type: integer
-          default: 10
+          description: 道闸需求数量（精确匹配）
+        frameRequiredQty:
+          type: integer
+          description: 框架需求数量（精确匹配）
+        releaseDateBeginFrom:
+          type: string
+          format: date
+          description: 发布开始日期范围起点（大于等于），用于筛选发布开始日期在此日期之后的数据
+        releaseDateBeginTo:
+          type: string
+          format: date
+          description: 发布开始日期范围终点（小于等于），用于筛选发布开始日期在此日期之前的数据
+        releaseDateEndFrom:
+          type: string
+          format: date
+          description: 发布结束日期范围起点（大于等于），用于筛选发布结束日期在此日期之后的数据
+        releaseDateEndTo:
+          type: string
+          format: date
+          description: 发布结束日期范围终点（小于等于），用于筛选发布结束日期在此日期之前的数据
+
+    ResultPageResultPlanCommunity:
+      type: object
+      description: 方案社区关联分页查询响应
+      properties:
+        code:
+          type: integer
+          description: 响应码，200表示成功
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          description: 分页结果
+          properties:
+            pageNum:
+              type: integer
+              description: 当前页码
+            pageSize:
+              type: integer
+              description: 每页大小
+            total:
+              type: integer
+              format: int64
+              description: 总记录数
+            pages:
+              type: integer
+              description: 总页数
+            list:
+              type: array
+              description: 方案社区关联列表
+              items:
+                $ref: '#/components/schemas/PlanCommunity'
+        timestamp:
+          type: integer
+          format: int64
+          description: 时间戳
 
     PlanBarrier:
       type: object
+      description: 方案道闸关联实体
       properties:
         id:
           type: integer
+          description: 关联ID
         planId:
           type: integer
+          description: 方案ID
         barrierGateId:
           type: integer
+          description: 道闸ID
+        planCommunityId:
+          type: integer
+          description: 方案社区关联ID，表示该道闸属于方案中的哪个社区
         releaseDateBegin:
           type: string
           format: date
+          description: 在该道闸的投放开始日期
         releaseDateEnd:
           type: string
           format: date
+          description: 在该道闸的投放结束日期
+        releaseStatus:
+          type: integer
+          description: 发布状态
 
     PlanBarrierQueryParam:
       type: object
+      description: 方案道闸关联分页查询参数，支持精确匹配、IN查询、范围查询等多种查询方式
+      allOf:
+        - $ref: '#/components/schemas/BaseQueryParam'
       properties:
         planId:
           type: integer
+          description: 方案ID（精确匹配）
+        planIdList:
+          type: array
+          description: 方案ID列表（IN查询），可同时查询多个方案
+          items:
+            type: integer
         barrierGateId:
           type: integer
-        pageNum:
+          description: 道闸ID（精确匹配）
+        barrierGateIdList:
+          type: array
+          description: 道闸ID列表（IN查询），可同时查询多个道闸
+          items:
+            type: integer
+        planCommunityId:
           type: integer
-          default: 1
-        pageSize:
+          description: 方案社区关联ID（精确匹配），用于查询特定方案社区下的道闸
+        planCommunityIdList:
+          type: array
+          description: 方案社区关联ID列表（IN查询），可同时查询多个方案社区
+          items:
+            type: integer
+        releaseStatus:
           type: integer
-          default: 10
+          description: 发布状态（精确匹配），具体状态码含义请参考枚举定义
+        releaseStatusList:
+          type: array
+          description: 发布状态列表（IN查询），可同时查询多个发布状态
+          items:
+            type: integer
+        releaseDateBeginFrom:
+          type: string
+          format: date
+          description: 发布开始日期范围起点（大于等于），用于筛选发布开始日期在此日期之后的数据
+        releaseDateBeginTo:
+          type: string
+          format: date
+          description: 发布开始日期范围终点（小于等于），用于筛选发布开始日期在此日期之前的数据
+        releaseDateEndFrom:
+          type: string
+          format: date
+          description: 发布结束日期范围起点（大于等于），用于筛选发布结束日期在此日期之后的数据
+        releaseDateEndTo:
+          type: string
+          format: date
+          description: 发布结束日期范围终点（小于等于），用于筛选发布结束日期在此日期之前的数据
+
+    ResultPageResultPlanBarrier:
+      type: object
+      description: 方案道闸关联分页查询响应
+      properties:
+        code:
+          type: integer
+          description: 响应码，200表示成功
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          description: 分页结果
+          properties:
+            pageNum:
+              type: integer
+              description: 当前页码
+            pageSize:
+              type: integer
+              description: 每页大小
+            total:
+              type: integer
+              format: int64
+              description: 总记录数
+            pages:
+              type: integer
+              description: 总页数
+            list:
+              type: array
+              description: 方案道闸关联列表
+              items:
+                $ref: '#/components/schemas/PlanBarrier'
+        timestamp:
+          type: integer
+          format: int64
+          description: 时间戳
 
     PlanFrame:
       type: object
+      description: 方案框架关联实体
       properties:
         id:
           type: integer
+          description: 关联ID
         planId:
           type: integer
+          description: 方案ID
         frameId:
           type: integer
+          description: 框架ID
+        planCommunityId:
+          type: integer
+          description: 方案社区关联ID，表示该框架属于方案中的哪个社区
         releaseDateBegin:
           type: string
           format: date
+          description: 在该框架的投放开始日期
         releaseDateEnd:
           type: string
           format: date
+          description: 在该框架的投放结束日期
+        releaseStatus:
+          type: integer
+          description: 发布状态
 
     PlanFrameQueryParam:
       type: object
+      description: 方案框架关联分页查询参数，支持精确匹配、IN查询、范围查询等多种查询方式
+      allOf:
+        - $ref: '#/components/schemas/BaseQueryParam'
       properties:
         planId:
           type: integer
+          description: 方案ID（精确匹配）
+        planIdList:
+          type: array
+          description: 方案ID列表（IN查询），可同时查询多个方案
+          items:
+            type: integer
         frameId:
           type: integer
-        pageNum:
+          description: 框架ID（精确匹配）
+        frameIdList:
+          type: array
+          description: 框架ID列表（IN查询），可同时查询多个框架
+          items:
+            type: integer
+        planCommunityId:
           type: integer
-          default: 1
-        pageSize:
+          description: 方案社区关联ID（精确匹配），用于查询特定方案社区下的框架
+        planCommunityIdList:
+          type: array
+          description: 方案社区关联ID列表（IN查询），可同时查询多个方案社区
+          items:
+            type: integer
+        releaseStatus:
           type: integer
-          default: 10
+          description: 发布状态（精确匹配），具体状态码含义请参考枚举定义
+        releaseStatusList:
+          type: array
+          description: 发布状态列表（IN查询），可同时查询多个发布状态
+          items:
+            type: integer
+        releaseDateBeginFrom:
+          type: string
+          format: date
+          description: 发布开始日期范围起点（大于等于），用于筛选发布开始日期在此日期之后的数据
+        releaseDateBeginTo:
+          type: string
+          format: date
+          description: 发布开始日期范围终点（小于等于），用于筛选发布开始日期在此日期之前的数据
+        releaseDateEndFrom:
+          type: string
+          format: date
+          description: 发布结束日期范围起点（大于等于），用于筛选发布结束日期在此日期之后的数据
+        releaseDateEndTo:
+          type: string
+          format: date
+          description: 发布结束日期范围终点（小于等于），用于筛选发布结束日期在此日期之前的数据
+
+    ResultPageResultPlanFrame:
+      type: object
+      description: 方案框架关联分页查询响应
+      properties:
+        code:
+          type: integer
+          description: 响应码，200表示成功
+        message:
+          type: string
+          description: 响应消息
+        data:
+          type: object
+          description: 分页结果
+          properties:
+            pageNum:
+              type: integer
+              description: 当前页码
+            pageSize:
+              type: integer
+              description: 每页大小
+            total:
+              type: integer
+              format: int64
+              description: 总记录数
+            pages:
+              type: integer
+              description: 总页数
+            list:
+              type: array
+              description: 方案框架关联列表
+              items:
+                $ref: '#/components/schemas/PlanFrame'
+        timestamp:
+          type: integer
+          format: int64
+          description: 时间戳
 
 # 全局安全设置
 security:
-  - ApiKeyAuth: [2Tr9KQOgiPM3quemAWXNkEnh1LsHIjcY]
+  - ApiKeyAuth: []

@@ -1,6 +1,7 @@
 package com.touhuwai.service.impl;
 
 import com.touhuwai.common.PageResult;
+import com.touhuwai.dto.param.BarrierGateQueryParam;
 import com.touhuwai.entity.BarrierGate;
 import com.touhuwai.mapper.BarrierGateMapper;
 import com.touhuwai.service.BarrierGateService;
@@ -117,7 +118,7 @@ public class BarrierGateServiceImpl implements BarrierGateService {
      * {@inheritDoc}
      */
     @Override
-    public List<BarrierGate> getListByParam(com.touhuwai.dto.param.BarrierGateQueryParam param) {
+    public List<BarrierGate> getListByParam(BarrierGateQueryParam param) {
         return barrierGateMapper.selectListByParam(param);
     }
 
@@ -125,7 +126,7 @@ public class BarrierGateServiceImpl implements BarrierGateService {
      * {@inheritDoc}
      */
     @Override
-    public PageResult<BarrierGate> getPageByParam(com.touhuwai.dto.param.BarrierGateQueryParam param) {
+    public PageResult<BarrierGate> getPageByParam(BarrierGateQueryParam param) {
         PageHelper.startPage(param.getPageNum(), param.getPageSize());
         List<BarrierGate> list = barrierGateMapper.selectListByParam(param);
         PageInfo<BarrierGate> pageInfo = new PageInfo<>(list);

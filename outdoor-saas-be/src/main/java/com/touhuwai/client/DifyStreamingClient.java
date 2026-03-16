@@ -110,7 +110,7 @@ public class DifyStreamingClient {
             .bodyValue(request)
             .retrieve()
             .onStatus(
-                status -> status.isError(),
+                    HttpStatusCode::isError,
                 response -> response.bodyToMono(String.class)
                     .flatMap(errorBody -> {
                         log.error("Dify API error: {} - {}", response.statusCode(), errorBody);
@@ -119,7 +119,7 @@ public class DifyStreamingClient {
                     })
             )
             .bodyToFlux(String.class)
-            .filter(line -> line != null && !line.isEmpty())
+            .filter(line -> !line.isEmpty())
             .flatMap(line -> {
                 try {
                     DifyStreamEvent event = parseEvent(line);

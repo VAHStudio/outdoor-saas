@@ -2,6 +2,7 @@ package com.touhuwai.controller;
 
 import com.touhuwai.common.PageResult;
 import com.touhuwai.common.Result;
+import com.touhuwai.dto.param.BarrierGateQueryParam;
 import com.touhuwai.entity.BarrierGate;
 import com.touhuwai.service.BarrierGateService;
 import lombok.RequiredArgsConstructor;
@@ -175,7 +176,7 @@ public class BarrierGateController {
      * @return 道闸列表
      */
     @PostMapping("/filter")
-    public Result<List<BarrierGate>> getListByParam(@RequestBody com.touhuwai.dto.param.BarrierGateQueryParam param) {
+    public Result<List<BarrierGate>> getListByParam(@RequestBody BarrierGateQueryParam param) {
         List<BarrierGate> list = barrierGateService.getListByParam(param);
         return Result.success(list);
     }

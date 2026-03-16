@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * AI 助手控制器
@@ -87,9 +88,8 @@ public class AiAssistantController {
     private SseEmitter handleDifyChat(String message, String conversationId, String userId) {
         // 获取或创建会话（基于用户ID关联对话）
         // 如果是新会话，返回 null，让 Dify 生成 conversation_id
-        String activeConversationId = conversationService.getOrCreateConversation(
-            userId, conversationId);
-        
+        String activeConversationId = conversationService.getOrCreateConversation(userId, conversationId);
+
         // 创建 SSE Emitter，超时 5 分钟
         SseEmitter emitter = new SseEmitter(300_000L);
         String emitterId = UUID.randomUUID().toString();
@@ -107,26 +107,22 @@ public class AiAssistantController {
         inputs.put("currentTime", LocalDateTime.now().toString());
         
         // 使用 AtomicReference 来在 lambda 中修改值
-        final java.util.concurrent.atomic.AtomicReference<String> currentConversationId = 
-            new java.util.concurrent.atomic.AtomicReference<>(activeConversationId);
-        // 记录原始传入的会话ID，用于检测会话是否变更
-        final String originalConversationId = activeConversationId;
-        
+        final AtomicReference<String> currentConversationId = new AtomicReference<>(activeConversationId);
         try {
             // 启动流式处理
             difyClient.streamChat(message, inputs, event -> {
                 // 如果事件包含 conversation_id，检查是否需要更新
-                if (event.getConversationId() != null 
-                    && !event.getConversationId().isEmpty()) {
+                if (event.getConversationId() != null
+                        && !event.getConversationId().isEmpty()) {
                     String difyConversationId = event.getConversationId();
                     String currentId = currentConversationId.get();
-                    
+
                     // 情况1：之前没有会话ID，保存新的
                     if (currentId == null) {
                         currentConversationId.set(difyConversationId);
                         conversationService.saveConversationMapping(userId, difyConversationId);
-                        log.info("保存 Dify 生成的会话ID: userId={}, conversationId={}", 
-                            userId, difyConversationId);
+                        log.info("保存 Dify 生成的会话ID: userId={}, conversationId={}",
+                                userId, difyConversationId);
                     }
                     // 情况2：会话ID发生了变化（原会话失效，Dify创建了新会话）
                     else if (!currentId.equals(difyConversationId)) {
@@ -136,8 +132,8 @@ public class AiAssistantController {
                         // 保存新的映射关系
                         currentConversationId.set(difyConversationId);
                         conversationService.saveConversationMapping(userId, difyConversationId);
-                        log.info("更新会话映射: userId={}, newConversationId={}", 
-                            userId, difyConversationId);
+                        log.info("更新会话映射: userId={}, newConversationId={}",
+                                userId, difyConversationId);
                     }
                 }
                 handleDifyEvent(emitterId, emitter, event, currentConversationId.get());

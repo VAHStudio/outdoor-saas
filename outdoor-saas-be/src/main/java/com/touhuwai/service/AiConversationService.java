@@ -327,16 +327,9 @@ public class AiConversationService {
         int offset = page * PAGE_SIZE;
         String conversationId = conversation.getConversationId();
         
-        // 1. 尝试从缓存获取
-        List<DifyMessage> cachedMessages = cacheService
-            .getCachedDifyMessages(conversationId, offset, PAGE_SIZE);
-        
-        if (cachedMessages != null && !cachedMessages.isEmpty()) {
-            log.debug("Dify 消息缓存命中: conversationId={}", conversationId);
-            return DifyMessageConverter.convertList(cachedMessages);
-        }
-        
-        // 2. 缓存未命中，调用 Dify API
+        // Dify API 返回的消息列表顺序是：从旧到新（时间递增）
+        // 但前端期望显示顺序是：从新到旧（最新消息在最下面）
+        // 所以这里直接从 API 获取，不进行缓存，避免复杂的状态同步问题
         log.info("从 Dify API 获取消息: conversationId={}, offset={}, limit={}", 
             conversationId, offset, PAGE_SIZE);
         
@@ -348,14 +341,25 @@ public class AiConversationService {
                 offset
             );
             
-            // 3. 存入缓存
-            if (difyMessages != null && !difyMessages.isEmpty()) {
-                cacheService.cacheDifyMessages(conversationId, difyMessages);
-                log.info("成功从 Dify API 获取 {} 条消息", difyMessages.size());
+            if (difyMessages == null || difyMessages.isEmpty()) {
+                return List.of();
             }
             
-            // 4. 转换为本地格式
-            return DifyMessageConverter.convertList(difyMessages);
+            log.info("成功从 Dify API 获取 {} 条消息", difyMessages.size());
+            
+            // 转换为本地格式，并按时间正序排列（旧消息在前，新消息在后）
+            // 这样前端可以按顺序追加显示
+            List<AiConversationMessage> messages = DifyMessageConverter.convertList(difyMessages);
+            
+            // 按创建时间排序，确保显示顺序正确
+            messages.sort((m1, m2) -> {
+                if (m1.getCreatedAt() == null || m2.getCreatedAt() == null) {
+                    return 0;
+                }
+                return m1.getCreatedAt().compareTo(m2.getCreatedAt());
+            });
+            
+            return messages;
         } catch (Exception e) {
             log.error("获取 Dify 消息失败", e);
             // 出错时返回空列表，避免前端报错
