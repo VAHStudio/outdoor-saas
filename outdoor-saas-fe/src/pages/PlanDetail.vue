@@ -93,12 +93,12 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-if="communities.length === 0">
+            <tr v-if="paginatedCommunities.length === 0">
               <td colspan="4" class="px-6 py-8 text-center text-subtext-light dark:text-subtext-dark">
                 暂无关联社区
               </td>
             </tr>
-            <tr v-for="community in communities" :key="community.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+            <tr v-for="community in paginatedCommunities" :key="community.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
               <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ community.community?.communityNo || '-' }}</td>
               <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ community.community?.buildingName || '-' }}</td>
               <td class="px-6 py-4 text-sm text-subtext-light dark:text-subtext-dark">
@@ -110,6 +110,14 @@
             </tr>
           </tbody>
         </table>
+        <Pagination
+          v-if="communities.length > 0"
+          :current="communityPage"
+          :page-size="communityPageSize"
+          :total="communities.length"
+          @change="(page) => communityPage = page"
+          @page-size-change="(size) => { communityPageSize = size; communityPage = 1; }"
+        />
       </div>
 
       <!-- 道闸列表 -->
@@ -128,12 +136,12 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-if="barriers.length === 0">
+            <tr v-if="paginatedBarriers.length === 0">
               <td colspan="3" class="px-6 py-8 text-center text-subtext-light dark:text-subtext-dark">
                 暂无关联道闸
               </td>
             </tr>
-            <tr v-for="barrier in barriers" :key="barrier.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+            <tr v-for="barrier in paginatedBarriers" :key="barrier.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
               <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ barrier.barrierGate?.gateNo || '-' }}</td>
               <td class="px-6 py-4 text-sm text-subtext-light dark:text-subtext-dark">
                 {{ barrier.planCommunity?.community?.buildingName || '-' }}
@@ -146,6 +154,14 @@
             </tr>
           </tbody>
         </table>
+        <Pagination
+          v-if="barriers.length > 0"
+          :current="barrierPage"
+          :page-size="barrierPageSize"
+          :total="barriers.length"
+          @change="(page) => barrierPage = page"
+          @page-size-change="(size) => { barrierPageSize = size; barrierPage = 1; }"
+        />
       </div>
 
       <!-- 框架列表 -->
@@ -164,12 +180,12 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-            <tr v-if="frames.length === 0">
+            <tr v-if="paginatedFrames.length === 0">
               <td colspan="3" class="px-6 py-8 text-center text-subtext-light dark:text-subtext-dark">
                 暂无关联框架
               </td>
             </tr>
-            <tr v-for="frame in frames" :key="frame.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+            <tr v-for="frame in paginatedFrames" :key="frame.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
               <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ frame.frame?.frameNo || '-' }}</td>
               <td class="px-6 py-4 text-sm text-subtext-light dark:text-subtext-dark">
                 {{ frame.planCommunity?.community?.buildingName || '-' }}
@@ -182,18 +198,27 @@
             </tr>
           </tbody>
         </table>
+        <Pagination
+          v-if="frames.length > 0"
+          :current="framePage"
+          :page-size="framePageSize"
+          :total="frames.length"
+          @change="(page) => framePage = page"
+          @page-size-change="(size) => { framePageSize = size; framePage = 1; }"
+        />
       </div>
     </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import planService, { Plan } from '@/src/services/planService';
 import { planCommunityService } from '@/src/services/planCommunityService';
 import { planBarrierService } from '@/src/services/planBarrierService';
 import { planFrameService } from '@/src/services/planFrameService';
+import Pagination from '@/src/components/Pagination.vue';
 
 interface PlanCommunity {
   id: number;
@@ -266,6 +291,33 @@ const barriers = ref<PlanBarrier[]>([]);
 const frames = ref<PlanFrame[]>([]);
 const loading = ref(true);
 const error = ref('');
+
+// 社区列表分页
+const communityPage = ref(1);
+const communityPageSize = ref(10);
+const paginatedCommunities = computed(() => {
+  const start = (communityPage.value - 1) * communityPageSize.value;
+  const end = start + communityPageSize.value;
+  return communities.value.slice(start, end);
+});
+
+// 道闸列表分页
+const barrierPage = ref(1);
+const barrierPageSize = ref(10);
+const paginatedBarriers = computed(() => {
+  const start = (barrierPage.value - 1) * barrierPageSize.value;
+  const end = start + barrierPageSize.value;
+  return barriers.value.slice(start, end);
+});
+
+// 框架列表分页
+const framePage = ref(1);
+const framePageSize = ref(10);
+const paginatedFrames = computed(() => {
+  const start = (framePage.value - 1) * framePageSize.value;
+  const end = start + framePageSize.value;
+  return frames.value.slice(start, end);
+});
 
 const loadPlanDetail = async (planId: number) => {
   try {

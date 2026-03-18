@@ -84,6 +84,7 @@
         <PlanDetailView 
           v-else-if="selectedPlan" 
           :plan="selectedPlan"
+          :numeric-id="selectedPlan.numericId"
         />
       </div>
     </div>
@@ -106,6 +107,7 @@ type PlanStatus = 'draft' | 'communicating' | 'pending' | 'signed';
 
 interface DisplayPlan {
   id: string;
+  numericId: number;
   title: string;
   customer: string;
   status: PlanStatus;
@@ -143,6 +145,7 @@ const mapStatus = (releaseStatus: number): PlanStatus => {
 const displayPlans = computed<DisplayPlan[]>(() => {
   return plans.value.map(plan => ({
     id: plan.planNo,
+    numericId: plan.id,
     title: plan.planName,
     customer: plan.customer,
     status: mapStatus(plan.releaseStatus),
