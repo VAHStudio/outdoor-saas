@@ -7,6 +7,11 @@ spring:
   web:
     resources:
       static-locations: classpath:/static/,classpath:/public/
+  servlet:
+    multipart:
+      enabled: true   # 使用http multipart上传处理
+      max-file-size: 100MB # 设置单个文件的最大长度，默认1M，如不限制配置为-1
+      max-request-size: 100MB # 设置最大的请求文件的大小，默认10M，如不限制配置为-1
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher

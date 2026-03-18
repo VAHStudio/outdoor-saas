@@ -93,14 +93,19 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            <tr v-if="communities.length === 0">
+              <td colspan="4" class="px-6 py-8 text-center text-subtext-light dark:text-subtext-dark">
+                暂无关联社区
+              </td>
+            </tr>
             <tr v-for="community in communities" :key="community.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-              <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ community.communityNo }}</td>
-              <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ community.buildingName }}</td>
+              <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ community.community?.communityNo || '-' }}</td>
+              <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ community.community?.buildingName || '-' }}</td>
               <td class="px-6 py-4 text-sm text-subtext-light dark:text-subtext-dark">
-                {{ community.releaseDateBegin }} ~ {{ community.releaseDateEnd }}
+                {{ community.releaseDateBegin || '-' }} ~ {{ community.releaseDateEnd || '-' }}
               </td>
               <td class="px-6 py-4 text-sm text-subtext-light dark:text-subtext-dark">
-                {{ community.barrierRequiredQty }} / {{ community.frameRequiredQty }}
+                {{ community.barrierRequiredQty || 0 }} / {{ community.frameRequiredQty || 0 }}
               </td>
             </tr>
           </tbody>
@@ -123,9 +128,16 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            <tr v-if="barriers.length === 0">
+              <td colspan="3" class="px-6 py-8 text-center text-subtext-light dark:text-subtext-dark">
+                暂无关联道闸
+              </td>
+            </tr>
             <tr v-for="barrier in barriers" :key="barrier.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-              <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ barrier.gateNo }}</td>
-              <td class="px-6 py-4 text-sm text-subtext-light dark:text-subtext-dark">{{ barrier.communityName }}</td>
+              <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ barrier.barrierGate?.gateNo || '-' }}</td>
+              <td class="px-6 py-4 text-sm text-subtext-light dark:text-subtext-dark">
+                {{ barrier.planCommunity?.community?.buildingName || '-' }}
+              </td>
               <td class="px-6 py-4 text-sm">
                 <span :class="['px-2 py-1 rounded text-xs', getReleaseStatusColor(barrier.releaseStatus)]">
                   {{ getReleaseStatusText(barrier.releaseStatus) }}
@@ -152,9 +164,16 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            <tr v-if="frames.length === 0">
+              <td colspan="3" class="px-6 py-8 text-center text-subtext-light dark:text-subtext-dark">
+                暂无关联框架
+              </td>
+            </tr>
             <tr v-for="frame in frames" :key="frame.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
-              <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ frame.frameNo }}</td>
-              <td class="px-6 py-4 text-sm text-subtext-light dark:text-subtext-dark">{{ frame.communityName }}</td>
+              <td class="px-6 py-4 text-sm text-text-light dark:text-text-dark">{{ frame.frame?.frameNo || '-' }}</td>
+              <td class="px-6 py-4 text-sm text-subtext-light dark:text-subtext-dark">
+                {{ frame.planCommunity?.community?.buildingName || '-' }}
+              </td>
               <td class="px-6 py-4 text-sm">
                 <span :class="['px-2 py-1 rounded text-xs', getReleaseStatusColor(frame.releaseStatus)]">
                   {{ getReleaseStatusText(frame.releaseStatus) }}
@@ -180,30 +199,64 @@ interface PlanCommunity {
   id: number;
   planId: number;
   communityId: number;
-  communityNo?: string;
-  buildingName?: string;
   releaseDateBegin?: string;
   releaseDateEnd?: string;
   barrierRequiredQty?: number;
   frameRequiredQty?: number;
+  releaseStatus?: number;
+  community?: {
+    id: number;
+    communityNo: string;
+    buildingName: string;
+    buildingAddress?: string;
+  };
 }
 
 interface PlanBarrier {
   id: number;
   planId: number;
   barrierGateId: number;
-  gateNo?: string;
-  communityName?: string;
+  planCommunityId?: number;
+  releaseDateBegin?: string;
+  releaseDateEnd?: string;
   releaseStatus?: number;
+  barrierGate?: {
+    id: number;
+    gateNo: string;
+    deviceNo?: string;
+    doorLocation?: string;
+  };
+  planCommunity?: {
+    id: number;
+    communityId: number;
+    community?: {
+      buildingName: string;
+    };
+  };
 }
 
 interface PlanFrame {
   id: number;
   planId: number;
   frameId: number;
-  frameNo?: string;
-  communityName?: string;
+  planCommunityId?: number;
+  releaseDateBegin?: string;
+  releaseDateEnd?: string;
   releaseStatus?: number;
+  frame?: {
+    id: number;
+    frameNo: string;
+    building?: string;
+    unit?: string;
+    elevator?: string;
+  };
+  planCommunity?: {
+    id: number;
+    communityId: number;
+    community?: {
+      buildingName: string;
+    };
+  };
 }
 
 const route = useRoute();

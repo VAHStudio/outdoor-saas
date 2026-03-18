@@ -2,11 +2,13 @@ package com.touhuwai.controller;
 
 import com.touhuwai.common.PageResult;
 import com.touhuwai.common.Result;
+import com.touhuwai.dto.param.PlanBarrierBatchCreateDTO;
 import com.touhuwai.entity.PlanBarrier;
 import com.touhuwai.service.PlanBarrierService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -128,14 +130,31 @@ public class PlanBarrierController {
     
     /**
      * 批量新增方案道闸明细
-     * @param list 明细列表
+     * @param dto 批量创建参数
      * @return 操作结果
      */
     @PostMapping("/batch")
-    public Result<Integer> batchAdd(@RequestBody List<PlanBarrier> list) {
-        if (list == null || list.isEmpty()) {
-            return Result.badRequest("明细列表不能为空");
+    public Result<Integer> batchAdd(@RequestBody PlanBarrierBatchCreateDTO dto) {
+        if (dto.getPlanId() == null) {
+            return Result.badRequest("方案ID不能为空");
         }
+        if (dto.getBarrierGateIds() == null || dto.getBarrierGateIds().isEmpty()) {
+            return Result.badRequest("道闸ID列表不能为空");
+        }
+
+        // 将DTO转换为实体列表
+        List<PlanBarrier> list = new ArrayList<>();
+        for (Integer barrierGateId : dto.getBarrierGateIds()) {
+            PlanBarrier pb = new PlanBarrier();
+            pb.setPlanId(dto.getPlanId());
+            pb.setBarrierGateId(barrierGateId);
+            pb.setPlanCommunityId(dto.getPlanCommunityId());
+            pb.setReleaseDateBegin(dto.getReleaseDateBegin());
+            pb.setReleaseDateEnd(dto.getReleaseDateEnd());
+            pb.setReleaseStatus(dto.getReleaseStatus());
+            list.add(pb);
+        }
+
         int result = planBarrierService.batchAdd(list);
         if (result > 0) {
             return Result.success("批量新增成功", result);

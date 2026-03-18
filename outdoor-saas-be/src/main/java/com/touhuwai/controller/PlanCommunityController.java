@@ -2,11 +2,13 @@ package com.touhuwai.controller;
 
 import com.touhuwai.common.PageResult;
 import com.touhuwai.common.Result;
+import com.touhuwai.dto.param.PlanCommunityBatchCreateDTO;
 import com.touhuwai.entity.PlanCommunity;
 import com.touhuwai.service.PlanCommunityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -120,14 +122,32 @@ public class PlanCommunityController {
     
     /**
      * 批量新增方案社区关联
-     * @param list 关联列表
+     * @param dto 批量创建参数
      * @return 操作结果
      */
     @PostMapping("/batch")
-    public Result<Integer> batchAdd(@RequestBody List<PlanCommunity> list) {
-        if (list == null || list.isEmpty()) {
-            return Result.badRequest("关联列表不能为空");
+    public Result<Integer> batchAdd(@RequestBody PlanCommunityBatchCreateDTO dto) {
+        if (dto.getPlanId() == null) {
+            return Result.badRequest("方案ID不能为空");
         }
+        if (dto.getCommunityIds() == null || dto.getCommunityIds().isEmpty()) {
+            return Result.badRequest("社区ID列表不能为空");
+        }
+
+        // 将DTO转换为实体列表
+        List<PlanCommunity> list = new ArrayList<>();
+        for (Integer communityId : dto.getCommunityIds()) {
+            PlanCommunity pc = new PlanCommunity();
+            pc.setPlanId(dto.getPlanId());
+            pc.setCommunityId(communityId);
+            pc.setReleaseDateBegin(dto.getReleaseDateBegin());
+            pc.setReleaseDateEnd(dto.getReleaseDateEnd());
+            pc.setBarrierRequiredQty(dto.getBarrierRequiredQty());
+            pc.setFrameRequiredQty(dto.getFrameRequiredQty());
+            pc.setReleaseStatus(dto.getReleaseStatus());
+            list.add(pc);
+        }
+
         int result = planCommunityService.batchAdd(list);
         if (result > 0) {
             return Result.success("批量新增成功", result);

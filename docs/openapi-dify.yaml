@@ -520,6 +520,31 @@ paths:
       responses:
         '200':
           description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
+
+  /api/plan-community/batch:
+    post:
+      tags:
+        - 方案关联管理
+      summary: 批量创建方案社区关联
+      description: 批量将多个社区添加到方案，支持统一设置投放日期和需求数量
+      operationId: batch_create_plan_community
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanCommunityBatchCreateDTO'
+      responses:
+        '200':
+          description: 批量创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
 
   /api/plan-community/{id}:
     delete:
@@ -538,6 +563,10 @@ paths:
       responses:
         '200':
           description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
 
   /api/plan-barrier/filter/page:
     post:
@@ -576,6 +605,31 @@ paths:
       responses:
         '200':
           description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
+
+  /api/plan-barrier/batch:
+    post:
+      tags:
+        - 方案关联管理
+      summary: 批量创建方案道闸关联
+      description: 批量将多个道闸添加到方案，支持统一设置投放日期和方案社区关联
+      operationId: batch_create_plan_barrier
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanBarrierBatchCreateDTO'
+      responses:
+        '200':
+          description: 批量创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
 
   /api/plan-barrier/{id}:
     delete:
@@ -594,6 +648,10 @@ paths:
       responses:
         '200':
           description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
 
   /api/plan-frame/filter/page:
     post:
@@ -632,6 +690,31 @@ paths:
       responses:
         '200':
           description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
+
+  /api/plan-frame/batch:
+    post:
+      tags:
+        - 方案关联管理
+      summary: 批量创建方案框架关联
+      description: 批量将多个框架添加到方案，支持统一设置投放日期和方案社区关联
+      operationId: batch_create_plan_frame
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanFrameBatchCreateDTO'
+      responses:
+        '200':
+          description: 批量创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
 
   /api/plan-frame/{id}:
     delete:
@@ -650,6 +733,10 @@ paths:
       responses:
         '200':
           description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResultInteger'
 
 components:
   securitySchemes:
@@ -1450,6 +1537,42 @@ components:
           type: integer
           description: 发布状态
 
+    PlanCommunityBatchCreateDTO:
+      type: object
+      description: 方案社区关联批量创建参数，用于一次性将多个社区添加到方案
+      properties:
+        planId:
+          type: integer
+          description: 方案ID（必填），指定要将社区添加到哪个方案
+        communityIds:
+          type: array
+          description: 社区ID列表（必填），要添加到方案的社区ID列表，至少包含一个
+          items:
+            type: integer
+          minItems: 1
+        releaseDateBegin:
+          type: string
+          format: date
+          description: 投放开始日期（可选），默认为空
+        releaseDateEnd:
+          type: string
+          format: date
+          description: 投放结束日期（可选），默认为空
+        barrierRequiredQty:
+          type: integer
+          description: 道闸需求数量（可选），每个社区需要的道闸数量，默认为10
+          default: 10
+        frameRequiredQty:
+          type: integer
+          description: 框架需求数量（可选），每个社区需要的框架数量，默认为10
+          default: 10
+        releaseStatus:
+          type: integer
+          description: 发布状态（可选），默认为空
+      required:
+        - planId
+        - communityIds
+
     PlanCommunityQueryParam:
       type: object
       description: 方案社区关联分页查询参数，支持精确匹配、IN查询、范围查询等多种查询方式
@@ -1567,6 +1690,37 @@ components:
         releaseStatus:
           type: integer
           description: 发布状态
+
+    PlanBarrierBatchCreateDTO:
+      type: object
+      description: 方案道闸关联批量创建参数，用于一次性将多个道闸添加到方案
+      properties:
+        planId:
+          type: integer
+          description: 方案ID（必填），指定要将道闸添加到哪个方案
+        barrierGateIds:
+          type: array
+          description: 道闸ID列表（必填），要添加到方案的道闸ID列表，至少包含一个
+          items:
+            type: integer
+          minItems: 1
+        planCommunityId:
+          type: integer
+          description: 方案社区关联ID（可选），表示该道闸属于方案中的哪个社区
+        releaseDateBegin:
+          type: string
+          format: date
+          description: 投放开始日期（可选），默认为空
+        releaseDateEnd:
+          type: string
+          format: date
+          description: 投放结束日期（可选），默认为空
+        releaseStatus:
+          type: integer
+          description: 发布状态（可选），默认为空
+      required:
+        - planId
+        - barrierGateIds
 
     PlanBarrierQueryParam:
       type: object
@@ -1687,6 +1841,37 @@ components:
         releaseStatus:
           type: integer
           description: 发布状态
+
+    PlanFrameBatchCreateDTO:
+      type: object
+      description: 方案框架关联批量创建参数，用于一次性将多个框架添加到方案
+      properties:
+        planId:
+          type: integer
+          description: 方案ID（必填），指定要将框架添加到哪个方案
+        frameIds:
+          type: array
+          description: 框架ID列表（必填），要添加到方案的框架ID列表，至少包含一个
+          items:
+            type: integer
+          minItems: 1
+        planCommunityId:
+          type: integer
+          description: 方案社区关联ID（可选），表示该框架属于方案中的哪个社区
+        releaseDateBegin:
+          type: string
+          format: date
+          description: 投放开始日期（可选），默认为空
+        releaseDateEnd:
+          type: string
+          format: date
+          description: 投放结束日期（可选），默认为空
+        releaseStatus:
+          type: integer
+          description: 发布状态（可选），默认为空
+      required:
+        - planId
+        - frameIds
 
     PlanFrameQueryParam:
       type: object

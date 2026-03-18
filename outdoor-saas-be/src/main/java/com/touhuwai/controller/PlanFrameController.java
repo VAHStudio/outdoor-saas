@@ -2,11 +2,13 @@ package com.touhuwai.controller;
 
 import com.touhuwai.common.PageResult;
 import com.touhuwai.common.Result;
+import com.touhuwai.dto.param.PlanFrameBatchCreateDTO;
 import com.touhuwai.entity.PlanFrame;
 import com.touhuwai.service.PlanFrameService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -128,14 +130,31 @@ public class PlanFrameController {
     
     /**
      * 批量新增方案框架明细
-     * @param list 明细列表
+     * @param dto 批量创建参数
      * @return 操作结果
      */
     @PostMapping("/batch")
-    public Result<Integer> batchAdd(@RequestBody List<PlanFrame> list) {
-        if (list == null || list.isEmpty()) {
-            return Result.badRequest("明细列表不能为空");
+    public Result<Integer> batchAdd(@RequestBody PlanFrameBatchCreateDTO dto) {
+        if (dto.getPlanId() == null) {
+            return Result.badRequest("方案ID不能为空");
         }
+        if (dto.getFrameIds() == null || dto.getFrameIds().isEmpty()) {
+            return Result.badRequest("框架ID列表不能为空");
+        }
+
+        // 将DTO转换为实体列表
+        List<PlanFrame> list = new ArrayList<>();
+        for (Integer frameId : dto.getFrameIds()) {
+            PlanFrame pf = new PlanFrame();
+            pf.setPlanId(dto.getPlanId());
+            pf.setFrameId(frameId);
+            pf.setPlanCommunityId(dto.getPlanCommunityId());
+            pf.setReleaseDateBegin(dto.getReleaseDateBegin());
+            pf.setReleaseDateEnd(dto.getReleaseDateEnd());
+            pf.setReleaseStatus(dto.getReleaseStatus());
+            list.add(pf);
+        }
+
         int result = planFrameService.batchAdd(list);
         if (result > 0) {
             return Result.success("批量新增成功", result);

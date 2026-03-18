@@ -30,6 +30,11 @@
         </association>
         <association property="planCommunity" javaType="com.touhuwai.entity.PlanCommunity">
             <id column="plan_community_id" property="id"/>
+            <association property="community" javaType="com.touhuwai.entity.Community">
+                <id column="community_id" property="id"/>
+                <result column="community_no" property="communityNo"/>
+                <result column="building_name" property="buildingName"/>
+            </association>
         </association>
     </resultMap>
     
@@ -60,20 +65,26 @@
     <select id="selectAll" resultMap="WithRelationsResultMap">
         SELECT <include refid="Base_Column_List"/>,
                p.plan_no, p.plan_name, p.customer,
-               f.frame_no, f.building, f.unit, f.elevator
+               f.frame_no, f.building, f.unit, f.elevator,
+               pc.community_id, c.community_no, c.building_name
         FROM plan_frame pf
         LEFT JOIN plan p ON pf.plan_id = p.id
         LEFT JOIN frame f ON pf.frame_id = f.id
+        LEFT JOIN plan_community pc ON pf.plan_community_id = pc.id
+        LEFT JOIN community c ON pc.community_id = c.id
         ORDER BY pf.id DESC
     </select>
     
     <select id="selectList" resultMap="WithRelationsResultMap">
         SELECT <include refid="Base_Column_List"/>,
                p.plan_no, p.plan_name, p.customer,
-               f.frame_no, f.building, f.unit, f.elevator
+               f.frame_no, f.building, f.unit, f.elevator,
+               pc.community_id, c.community_no, c.building_name
         FROM plan_frame pf
         LEFT JOIN plan p ON pf.plan_id = p.id
         LEFT JOIN frame f ON pf.frame_id = f.id
+        LEFT JOIN plan_community pc ON pf.plan_community_id = pc.id
+        LEFT JOIN community c ON pc.community_id = c.id
         <where>
             <if test="planId != null">
                 AND pf.plan_id = #{planId}
@@ -113,10 +124,13 @@
     <select id="selectByPlanId" resultMap="WithRelationsResultMap">
         SELECT <include refid="Base_Column_List"/>,
                p.plan_no, p.plan_name, p.customer,
-               f.frame_no, f.building, f.unit, f.elevator
+               f.frame_no, f.building, f.unit, f.elevator,
+               pc.community_id, c.community_no, c.building_name
         FROM plan_frame pf
         LEFT JOIN plan p ON pf.plan_id = p.id
         LEFT JOIN frame f ON pf.frame_id = f.id
+        LEFT JOIN plan_community pc ON pf.plan_community_id = pc.id
+        LEFT JOIN community c ON pc.community_id = c.id
         WHERE pf.plan_id = #{planId}
         ORDER BY pf.id DESC
     </select>
@@ -135,10 +149,13 @@
     <select id="selectByPlanCommunityId" resultMap="WithRelationsResultMap">
         SELECT <include refid="Base_Column_List"/>,
                p.plan_no, p.plan_name, p.customer,
-               f.frame_no, f.building, f.unit, f.elevator
+               f.frame_no, f.building, f.unit, f.elevator,
+               pc.community_id, c.community_no, c.building_name
         FROM plan_frame pf
         LEFT JOIN plan p ON pf.plan_id = p.id
         LEFT JOIN frame f ON pf.frame_id = f.id
+        LEFT JOIN plan_community pc ON pf.plan_community_id = pc.id
+        LEFT JOIN community c ON pc.community_id = c.id
         WHERE pf.plan_community_id = #{planCommunityId}
         ORDER BY pf.id DESC
     </select>
@@ -213,10 +230,13 @@
     <select id="selectByParam" resultMap="WithRelationsResultMap">
         SELECT <include refid="Base_Column_List"/>,
                p.plan_no, p.plan_name, p.customer,
-               f.frame_no, f.building, f.unit, f.elevator
+               f.frame_no, f.building, f.unit, f.elevator,
+               pc.community_id, c.community_no, c.building_name
         FROM plan_frame pf
         LEFT JOIN plan p ON pf.plan_id = p.id
         LEFT JOIN frame f ON pf.frame_id = f.id
+        LEFT JOIN plan_community pc ON pf.plan_community_id = pc.id
+        LEFT JOIN community c ON pc.community_id = c.id
         <where>
             <if test="planId != null">
                 AND pf.plan_id = #{planId}

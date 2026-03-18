@@ -29,6 +29,11 @@
         </association>
         <association property="planCommunity" javaType="com.touhuwai.entity.PlanCommunity">
             <id column="plan_community_id" property="id"/>
+            <association property="community" javaType="com.touhuwai.entity.Community">
+                <id column="community_id" property="id"/>
+                <result column="community_no" property="communityNo"/>
+                <result column="building_name" property="buildingName"/>
+            </association>
         </association>
     </resultMap>
     
@@ -59,20 +64,26 @@
     <select id="selectAll" resultMap="WithRelationsResultMap">
         SELECT <include refid="Base_Column_List"/>,
                p.plan_no, p.plan_name, p.customer,
-               bg.gate_no, bg.device_no, bg.door_location
+               bg.gate_no, bg.device_no, bg.door_location,
+               pc.community_id, c.community_no, c.building_name
         FROM plan_barrier pb
         LEFT JOIN plan p ON pb.plan_id = p.id
         LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        LEFT JOIN plan_community pc ON pb.plan_community_id = pc.id
+        LEFT JOIN community c ON pc.community_id = c.id
         ORDER BY pb.id DESC
     </select>
     
     <select id="selectList" resultMap="WithRelationsResultMap">
         SELECT <include refid="Base_Column_List"/>,
                p.plan_no, p.plan_name, p.customer,
-               bg.gate_no, bg.device_no, bg.door_location
+               bg.gate_no, bg.device_no, bg.door_location,
+               pc.community_id, c.community_no, c.building_name
         FROM plan_barrier pb
         LEFT JOIN plan p ON pb.plan_id = p.id
         LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        LEFT JOIN plan_community pc ON pb.plan_community_id = pc.id
+        LEFT JOIN community c ON pc.community_id = c.id
         <where>
             <if test="planId != null">
                 AND pb.plan_id = #{planId}
@@ -112,10 +123,13 @@
     <select id="selectByPlanId" resultMap="WithRelationsResultMap">
         SELECT <include refid="Base_Column_List"/>,
                p.plan_no, p.plan_name, p.customer,
-               bg.gate_no, bg.device_no, bg.door_location
+               bg.gate_no, bg.device_no, bg.door_location,
+               pc.community_id, c.community_no, c.building_name
         FROM plan_barrier pb
         LEFT JOIN plan p ON pb.plan_id = p.id
         LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        LEFT JOIN plan_community pc ON pb.plan_community_id = pc.id
+        LEFT JOIN community c ON pc.community_id = c.id
         WHERE pb.plan_id = #{planId}
         ORDER BY pb.id DESC
     </select>
@@ -134,10 +148,13 @@
     <select id="selectByPlanCommunityId" resultMap="WithRelationsResultMap">
         SELECT <include refid="Base_Column_List"/>,
                p.plan_no, p.plan_name, p.customer,
-               bg.gate_no, bg.device_no, bg.door_location
+               bg.gate_no, bg.device_no, bg.door_location,
+               pc.community_id, c.community_no, c.building_name
         FROM plan_barrier pb
         LEFT JOIN plan p ON pb.plan_id = p.id
         LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        LEFT JOIN plan_community pc ON pb.plan_community_id = pc.id
+        LEFT JOIN community c ON pc.community_id = c.id
         WHERE pb.plan_community_id = #{planCommunityId}
         ORDER BY pb.id DESC
     </select>
@@ -212,10 +229,13 @@
     <select id="selectByParam" resultMap="WithRelationsResultMap">
         SELECT <include refid="Base_Column_List"/>,
                p.plan_no, p.plan_name, p.customer,
-               bg.gate_no, bg.device_no, bg.door_location
+               bg.gate_no, bg.device_no, bg.door_location,
+               pc.community_id, c.community_no, c.building_name
         FROM plan_barrier pb
         LEFT JOIN plan p ON pb.plan_id = p.id
         LEFT JOIN barrier_gate bg ON pb.barrier_gate_id = bg.id
+        LEFT JOIN plan_community pc ON pb.plan_community_id = pc.id
+        LEFT JOIN community c ON pc.community_id = c.id
         <where>
             <if test="planId != null">
                 AND pb.plan_id = #{planId}
